@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rightsrelay"
+version = "0.1.0"
+description = "Deterministic, memory-backed release control for commercial music assets"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [{ name = "RightsRelay contributors" }]
+dependencies = [
+  "pydantic>=2.13,<3",
+  "sibyl-memory-client>=0.8,<0.9",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=9,<10"]
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+testpaths = ["tests"]
