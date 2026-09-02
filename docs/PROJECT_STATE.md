@@ -3,16 +3,16 @@
 > Living handoff for Codex sessions. Read this file before working. Do not put
 > secrets or raw credential-bearing values here.
 
-Last updated: `2026-09-02T21:10:42+01:00`
-Status: `IN_PROGRESS`
-Active objective: Add the real Sibyl journal adapter, filmable CLI, blocked-only demo scripts, subprocess CLI tests, and exact README commands while preserving the frozen core.
+Last updated: `2026-09-02T21:17:24+01:00`
+Status: `COMPLETE`
+Active objective: Completed the real Sibyl journal adapter, filmable CLI, blocked-only demo scripts, subprocess CLI tests, and exact README commands while preserving the frozen core.
 
 ## Workspace
 
 - Repository: local Git repository; no remote configured yet
 - Worktree: `/home/rouma/rightsrelay`
 - Branch: `main`
-- Commit: `16e49d3` (`docs: record frozen core checkpoint`)
+- Commit: `5872e62` (`feat: add Sibyl journal adapter`); completed CLI checkpoint is ready for a local commit
 - Protected releases/artifacts: `src/rightsrelay/gate.py`, `src/rightsrelay/models.py`, and existing MemoryClient call shapes are frozen unless an existing test turns red; partner integrations and UI are out of scope
 
 ## Constraints
@@ -37,6 +37,10 @@ Active objective: Add the real Sibyl journal adapter, filmable CLI, blocked-only
 - Inspected the installed SDK source: `write_event` is keyword-only over `evaluated`, `acted`, `forward`, `extra`, and `ts`; `read_events` exists and returns decoded event dictionaries.
 - Added `src/rightsrelay/journal.py`, mapping authorization event/status/reasons into the four Sibyl journal payloads and placing entity name, status, reasons, and present partner identifiers in `extra`.
 - Added a real temporary-database journal test that writes through `write_event` and verifies the decoded `read_events` result.
+- Added the `python -m rightsrelay` CLI with `status`, `init-aurora`, local-only `review-limited`, fail-closed `attempt`, explicit unwired `acquire-grant`, and deterministic `apply-grant` commands. Every command prints the resolved shared database path.
+- Added a three-process CLI test: Session 1 persists the limited authorization, Session 2 blocks paid Instagram and writes no packet, the same entity is updated, and Session 3 clears the identical request and writes `release-packets/campaign-aurora-neon-drive.json`.
+- Added executable blocked-only demo scripts and an unedited-take shot list. Session 1 waits for a real PID kill; Session 2 ends BLOCKED and makes no ACP/x402 claim.
+- Updated README CLI commands and exact journal/memory/export line references.
 - Created the repository and required source/test/script directories.
 - Added MIT licensing, Python package metadata, and isolated development dependencies.
 - Installed and inspected `sibyl-memory-client==0.8.0`; confirmed `MemoryClient.local`, `set_entity`, and `get_entity` signatures from the installed source.
@@ -64,25 +68,30 @@ Active objective: Add the real Sibyl journal adapter, filmable CLI, blocked-only
 | Python compilation | passed | `.venv/bin/python -m compileall -q src tests scripts`, 2026-09-02 |
 | Diff hygiene | passed | `git diff --check`; generated `__pycache__` directories removed, 2026-09-02 |
 | Journal adapter | passed | `.venv/bin/pytest tests/test_journal.py -q` → `1 passed`; exact decoded event mapping verified, 2026-09-02 |
+| CLI subprocess lifecycle | passed | `.venv/bin/pytest tests/test_cli_fresh_session.py -q` → `3 passed`; missing entity exits 2, x402 stub is explicit, blocked/no-packet then identical cleared request verified, 2026-09-02 |
+| Full suite after CLI | passed | `.venv/bin/pytest -q` → `15 passed in 2.23s`, 2026-09-02 |
+| Demo scripts | passed | `bash -n scripts/demo_session1.sh scripts/demo_session2.sh`, 2026-09-02 |
+| Python compilation after CLI | passed | `.venv/bin/python -m compileall -q src tests scripts`; generated project `__pycache__` directories removed, 2026-09-02 |
+| Final diff hygiene | passed | `git diff --check`, 2026-09-02 |
 
 ## Risks And Blockers
 
-- Published SDK signatures may differ from the prompt; installed package inspection is authoritative.
 - No Git remote is configured, so checkpoints can be committed locally but not pushed.
+- GitHub CLI authentication reports invalid; no authentication change was attempted because this turn forbids pushing and remote creation.
 - README file:line references are exact for this checkpoint and must be updated if `memory.py`, `gate.py`, or `export.py` shifts.
-- COLD journal helpers, REFERENCE storage, UI/CLI, demo scripts, ACP, and x402 are deliberately not implemented in this stopped checkpoint.
+- Virtuals ACP and x402 remain deliberately unwired and unclaimed. `acquire-grant` raises `NotImplementedError("x402 not wired")`.
 
 ## Next Actions
 
-1. Implement the CLI and module entrypoint against the frozen core and journal adapter.
-2. Add the subprocess CLI lifecycle test, blocked-only demo scripts, and recording shot list.
-3. Update exact README commands and journal line citation; stop after the full suite is green.
+1. Stop at this checkpoint as requested.
+2. In a separately authorized turn, wire live x402 only after confirming the qualifying Base environment; keep `apply-grant` as the successful mutation boundary.
+3. Add Virtuals ACP only if a real request-through-evaluation lifecycle can be completed and filmed.
 
 ## Session Handoff
 
 - Start with this file and `git status --short --branch`.
-- Frozen core command: `.venv/bin/pytest -q`.
-- Inspect `src/rightsrelay/memory.py`, `gate.py`, `export.py`, and the three required test files first.
+- Verification command: `.venv/bin/pytest -q`.
+- Treat `src/rightsrelay/gate.py`, `src/rightsrelay/models.py`, and the existing MemoryClient call shapes as frozen unless a test turns red.
 - Do not begin UI, ACP, or x402 implementation without a new authorized continuation.
 
 ## Change Log
@@ -94,3 +103,4 @@ Active objective: Add the real Sibyl journal adapter, filmable CLI, blocked-only
 | 2026-09-02T20:49:06+01:00 | Codex | Completed frozen memory/export checkpoint | Commit `cc5d7c1`; 11 tests passed; deletion and real fresh-process requirements verified; partner stacks remain unclaimed |
 | 2026-09-02T21:00:00+01:00 | Codex | Started journal and CLI checkpoint | Frozen core protected; no remote/push; journal and CLI test seams confirmed |
 | 2026-09-02T21:10:42+01:00 | Codex | Completed real Sibyl journal adapter | `write_event` mapping verified through `read_events`; journal test passed |
+| 2026-09-02T21:17:24+01:00 | Codex | Completed filmable CLI checkpoint | 15 tests passed; cross-process BLOCKED/no-packet and CLEARED/packet paths verified; demo remains honest about unwired partners |
