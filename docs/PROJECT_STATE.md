@@ -3,17 +3,17 @@
 > Living handoff for Codex sessions. Read this file before working. Do not put
 > secrets or raw credential-bearing values here.
 
-Last updated: `2026-09-02T20:49:06+01:00`
-Status: `COMPLETE`
-Active objective: The frozen Sep 2 RightsRelay core is implemented and verified; stop before UI or partner integration work.
+Last updated: `2026-09-02T21:10:42+01:00`
+Status: `IN_PROGRESS`
+Active objective: Add the real Sibyl journal adapter, filmable CLI, blocked-only demo scripts, subprocess CLI tests, and exact README commands while preserving the frozen core.
 
 ## Workspace
 
 - Repository: local Git repository; no remote configured yet
 - Worktree: `/home/rouma/rightsrelay`
 - Branch: `main`
-- Commit: `cc5d7c1` (latest substantive code checkpoint; this state-only successor records it)
-- Protected releases/artifacts: none; partner integrations and UI are out of scope for this checkpoint
+- Commit: `16e49d3` (`docs: record frozen core checkpoint`)
+- Protected releases/artifacts: `src/rightsrelay/gate.py`, `src/rightsrelay/models.py`, and existing MemoryClient call shapes are frozen unless an existing test turns red; partner integrations and UI are out of scope
 
 ## Constraints
 
@@ -26,12 +26,17 @@ Active objective: The frozen Sep 2 RightsRelay core is implemented and verified;
 
 ## Current Context
 
+- This turn is restricted to `journal.py`, CLI/entrypoint, two blocked-only demo scripts, the recording shot list, two new test files, and README updates.
+- GitHub CLI authentication currently reports invalid and no remote exists. Pushing or creating a remote is explicitly forbidden this turn.
 - `sibyl-memory-client` was not installed globally when work started.
 - The official Sibyl repository documents local-first, unactivated SDK operation and WARM uniqueness by `(tenant_id, category, name)`.
 - User-confirmed test seams are `can_release`, fail-closed export, and cross-process Sibyl persistence.
 
 ## Work Completed
 
+- Inspected the installed SDK source: `write_event` is keyword-only over `evaluated`, `acted`, `forward`, `extra`, and `ts`; `read_events` exists and returns decoded event dictionaries.
+- Added `src/rightsrelay/journal.py`, mapping authorization event/status/reasons into the four Sibyl journal payloads and placing entity name, status, reasons, and present partner identifiers in `extra`.
+- Added a real temporary-database journal test that writes through `write_event` and verifies the decoded `read_events` result.
 - Created the repository and required source/test/script directories.
 - Added MIT licensing, Python package metadata, and isolated development dependencies.
 - Installed and inspected `sibyl-memory-client==0.8.0`; confirmed `MemoryClient.local`, `set_entity`, and `get_entity` signatures from the installed source.
@@ -58,6 +63,7 @@ Active objective: The frozen Sep 2 RightsRelay core is implemented and verified;
 | Full suite | passed | `.venv/bin/pytest -q` → `11 passed in 1.00s`, 2026-09-02 |
 | Python compilation | passed | `.venv/bin/python -m compileall -q src tests scripts`, 2026-09-02 |
 | Diff hygiene | passed | `git diff --check`; generated `__pycache__` directories removed, 2026-09-02 |
+| Journal adapter | passed | `.venv/bin/pytest tests/test_journal.py -q` → `1 passed`; exact decoded event mapping verified, 2026-09-02 |
 
 ## Risks And Blockers
 
@@ -68,9 +74,9 @@ Active objective: The frozen Sep 2 RightsRelay core is implemented and verified;
 
 ## Next Actions
 
-1. Configure a GitHub remote before the next checkpoint if this repository should be published; do not assume a remote exists.
-2. On the next authorized build turn, add COLD event helpers and REFERENCE grant/policy storage before the minimal CLI/UI.
-3. Keep Base and Virtuals absent until their real lifecycles are exercised; never add temporary mocks to `main`.
+1. Implement the CLI and module entrypoint against the frozen core and journal adapter.
+2. Add the subprocess CLI lifecycle test, blocked-only demo scripts, and recording shot list.
+3. Update exact README commands and journal line citation; stop after the full suite is green.
 
 ## Session Handoff
 
@@ -86,3 +92,5 @@ Active objective: The frozen Sep 2 RightsRelay core is implemented and verified;
 | 2026-09-02T18:25:00+01:00 | Codex | Initialized RightsRelay repository | Frozen core implementation in progress; remote not configured |
 | 2026-09-02T20:44:12+01:00 | Codex | Completed SDK proof and deterministic gate checkpoint | Real Sibyl round-trip passed; 7 gate tests passed |
 | 2026-09-02T20:49:06+01:00 | Codex | Completed frozen memory/export checkpoint | Commit `cc5d7c1`; 11 tests passed; deletion and real fresh-process requirements verified; partner stacks remain unclaimed |
+| 2026-09-02T21:00:00+01:00 | Codex | Started journal and CLI checkpoint | Frozen core protected; no remote/push; journal and CLI test seams confirmed |
+| 2026-09-02T21:10:42+01:00 | Codex | Completed real Sibyl journal adapter | `write_event` mapping verified through `read_events`; journal test passed |
