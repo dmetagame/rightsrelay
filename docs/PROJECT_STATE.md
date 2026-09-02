@@ -12,7 +12,7 @@ Active objective: The frozen Sep 2 RightsRelay core is implemented and verified;
 - Repository: local Git repository; no remote configured yet
 - Worktree: `/home/rouma/rightsrelay`
 - Branch: `main`
-- Commit: `7d36485` (`feat: add deterministic release gate`)
+- Commit: `cc5d7c1` (latest substantive code checkpoint; this state-only successor records it)
 - Protected releases/artifacts: none; partner integrations and UI are out of scope for this checkpoint
 
 ## Constraints
@@ -43,6 +43,7 @@ Active objective: The frozen Sep 2 RightsRelay core is implemented and verified;
 - Added `build_release_packet`; callers cannot supply an authorization, every export recalls Sibyl memory, invokes `can_release`, returns a 409-compatible refusal when blocked, and writes no output when memory is unavailable.
 - Added the deletion test and a real two-process persistence test. The second process recalls the limited grant, observes BLOCKED, rewrites the same entity, and observes CLEARED.
 - Expanded the README with exact current write/read/gate/export line references, load-bearing explanation, honest partner-stack status, and prior-work declaration.
+- Created local checkpoint commit `cc5d7c1` for the load-bearing memory/export implementation; no push was possible because no remote is configured.
 
 ## Verification
 
@@ -84,4 +85,4 @@ Active objective: The frozen Sep 2 RightsRelay core is implemented and verified;
 | --- | --- | --- | --- |
 | 2026-09-02T18:25:00+01:00 | Codex | Initialized RightsRelay repository | Frozen core implementation in progress; remote not configured |
 | 2026-09-02T20:44:12+01:00 | Codex | Completed SDK proof and deterministic gate checkpoint | Real Sibyl round-trip passed; 7 gate tests passed |
-| 2026-09-02T20:49:06+01:00 | Codex | Completed frozen memory/export checkpoint | 11 tests passed; deletion and real fresh-process requirements verified; partner stacks remain unclaimed |
+| 2026-09-02T20:49:06+01:00 | Codex | Completed frozen memory/export checkpoint | Commit `cc5d7c1`; 11 tests passed; deletion and real fresh-process requirements verified; partner stacks remain unclaimed |
