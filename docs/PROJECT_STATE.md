@@ -3,7 +3,7 @@
 > Living handoff for Codex sessions. Read this file before working. Do not put
 > secrets or raw credential-bearing values here.
 
-Last updated: `2026-09-02T21:17:24+01:00`
+Last updated: `2026-09-02T21:18:30+01:00`
 Status: `COMPLETE`
 Active objective: Completed the real Sibyl journal adapter, filmable CLI, blocked-only demo scripts, subprocess CLI tests, and exact README commands while preserving the frozen core.
 
@@ -12,7 +12,7 @@ Active objective: Completed the real Sibyl journal adapter, filmable CLI, blocke
 - Repository: local Git repository; no remote configured yet
 - Worktree: `/home/rouma/rightsrelay`
 - Branch: `main`
-- Commit: `5872e62` (`feat: add Sibyl journal adapter`); completed CLI checkpoint is ready for a local commit
+- Commit: `847ab39` (`feat: add filmable RightsRelay CLI`)
 - Protected releases/artifacts: `src/rightsrelay/gate.py`, `src/rightsrelay/models.py`, and existing MemoryClient call shapes are frozen unless an existing test turns red; partner integrations and UI are out of scope
 
 ## Constraints
@@ -104,3 +104,4 @@ Active objective: Completed the real Sibyl journal adapter, filmable CLI, blocke
 | 2026-09-02T21:00:00+01:00 | Codex | Started journal and CLI checkpoint | Frozen core protected; no remote/push; journal and CLI test seams confirmed |
 | 2026-09-02T21:10:42+01:00 | Codex | Completed real Sibyl journal adapter | `write_event` mapping verified through `read_events`; journal test passed |
 | 2026-09-02T21:17:24+01:00 | Codex | Completed filmable CLI checkpoint | 15 tests passed; cross-process BLOCKED/no-packet and CLEARED/packet paths verified; demo remains honest about unwired partners |
+| 2026-09-02T21:18:30+01:00 | Codex | Created local CLI checkpoint | Commit `847ab39`; no push attempted because the user forbade pushing and no remote exists |
