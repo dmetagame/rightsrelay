@@ -3,8 +3,8 @@
 > Living handoff for Codex sessions. Read this file before working. Do not put
 > secrets or raw credential-bearing values here.
 
-Last updated: `2026-09-03T15:13:22+01:00`
-Status: `DEMO_CONSOLE_COMPLETE_PENDING_LOCAL_CHECKPOINT`
+Last updated: `2026-09-03T15:15:00+01:00`
+Status: `DEMO_CONSOLE_COMPLETE`
 Active objective: Complete and verify the filmable one-page demo console and submission pack while preserving the frozen core, x402 path, and ACP adapters.
 
 ## Workspace
@@ -12,7 +12,7 @@ Active objective: Complete and verify the filmable one-page demo console and sub
 - Repository: local Git repository; no remote configured yet
 - Worktree: `/home/rouma/rightsrelay`
 - Branch: `main`
-- Implementation checkpoint: `e95e1a8` (`docs: record Virtuals ACP checkpoint`)
+- Implementation checkpoint: `03cf2b1` (`feat: add filmable release demo console`)
 - Protected releases/artifacts: `src/rightsrelay/gate.py`, `src/rightsrelay/models.py`, existing MemoryClient call shapes, and both x402/ACP adapters are frozen unless an existing test turns red
 
 ## Constraints
@@ -209,4 +209,5 @@ Active objective: Complete and verify the filmable one-page demo console and sub
 | 2026-09-03T11:14:46+01:00 | Codex | Completed ACP code and fail-closed demo wiring | 20 tests passed; two funded integrations skipped; no credentials or real ACP job ID available |
 | 2026-09-03T11:16:29+01:00 | Codex | Created local Virtuals ACP implementation checkpoint | Commit `160f3f3`; no push possible because no remote exists and GitHub authentication is invalid |
 | 2026-09-03T15:03:00+01:00 | Codex | Reconciled handoff and began demo-console checkpoint | Clean `main` at `e95e1a8`; frozen core and partner adapters protected; no remote/push work authorized |
-| 2026-09-03T15:13:22+01:00 | Codex | Completed demo console and submission pack | 22 tests passed, two funded integrations skipped; real process-restart scripts and four-minute shot list verified; local checkpoint pending |
+| 2026-09-03T15:13:22+01:00 | Codex | Completed demo console and submission pack | 22 tests passed, two funded integrations skipped; real process-restart scripts and four-minute shot list verified |
+| 2026-09-03T15:15:00+01:00 | Codex | Created local demo-console checkpoint | Commit `03cf2b1`; no push attempted because no remote exists, GitHub authentication is invalid, and this turn forbids remote work |
