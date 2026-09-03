@@ -3,7 +3,9 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import subprocess
+from collections.abc import Callable, Mapping
 from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any, Sequence
@@ -20,8 +22,7 @@ DEFAULT_DATABASE = Path("./data/rightsrelay.sqlite")
 PACKET_RELATIVE_PATH = Path("release-packets/campaign-aurora-neon-drive.json")
 
 
-def acquire_grant() -> None:
-    raise NotImplementedError("x402 not wired")
+GrantPurchase = Callable[[], dict[str, Any]]
 
 
 def _database_path() -> Path:
@@ -197,39 +198,104 @@ def _attempt(arguments: argparse.Namespace, database: Path) -> int:
     return 0
 
 
-def _apply_grant(arguments: argparse.Namespace, database: Path) -> int:
+def apply_grant(
+    *,
+    database: Path,
+    paid: bool,
+    channels: list[str],
+    territories: list[str],
+    expires: str,
+    x402_tx: str | None = None,
+    actor: str = "grant.cli",
+    event: str = "authorization.grant_applied_cli",
+    journal_metadata: Mapping[str, Any] | None = None,
+) -> UseAuthorization:
     memory = AuthorizationMemory(database)
     current = memory.get_authorization()
     updated = _updated(
         current,
-        channels=_merged(current.channels, _csv_values(arguments.channels)),
-        paid=current.paid or arguments.paid,
-        territories=_merged(
-            current.territories,
-            _csv_values(arguments.territories),
-        ),
-        expires_on=arguments.expires,
+        channels=_merged(current.channels, channels),
+        paid=current.paid or paid,
+        territories=_merged(current.territories, territories),
+        expires_on=expires,
         status="CLEARED",
         blocking_reasons=[],
+        x402_tx=x402_tx or current.x402_tx,
         version=current.version + 1,
-        last_actor="grant.cli",
+        last_actor=actor,
     )
     persisted = memory.set_authorization(updated)
     Journal(database).record(
-        event="authorization.grant_applied_cli",
-        actor="grant.cli",
+        event=event,
+        actor=actor,
         status=persisted.status,
         reasons=persisted.blocking_reasons,
         acp_job_id=persisted.acp_job_id,
         x402_tx=persisted.x402_tx,
+        metadata=journal_metadata,
+    )
+    return persisted
+
+
+def acquire_grant(
+    *,
+    database: Path,
+    purchase: GrantPurchase | None = None,
+) -> UseAuthorization:
+    if purchase is None:
+        from rightsrelay.x402_buyer import buy_grant
+
+        purchase = buy_grant
+
+    grant = purchase()
+    if grant.get("asset_id") != "neon-drive" or grant.get("campaign_id") != "aurora":
+        raise ValueError("x402 grant does not match campaign-aurora:neon-drive")
+    transaction = grant.get("x402_tx")
+    if not isinstance(transaction, str) or not transaction:
+        raise ValueError("x402 grant is missing its settlement identifier")
+    payment = grant.get("_payment")
+    metadata = payment if isinstance(payment, dict) else {}
+
+    return apply_grant(
+        database=database,
+        paid=grant.get("paid") is True,
+        channels=list(grant.get("channels", [])),
+        territories=list(grant.get("territories", [])),
+        expires=str(grant["expires_on"]),
+        x402_tx=transaction,
+        actor="x402.buyer",
+        event="authorization.grant_acquired_x402",
+        journal_metadata=metadata,
+    )
+
+
+def _apply_grant(arguments: argparse.Namespace, database: Path) -> int:
+    persisted = apply_grant(
+        database=database,
+        paid=arguments.paid,
+        channels=_csv_values(arguments.channels),
+        territories=_csv_values(arguments.territories),
+        expires=arguments.expires,
     )
     print("GRANT APPLIED (CLI mutation; not x402)")
     _print_entity(persisted)
     return 0
 
 
-def _acquire_grant(_: argparse.Namespace, __: Path) -> int:
-    acquire_grant()
+def _acquire_grant(_: argparse.Namespace, database: Path) -> int:
+    persisted = acquire_grant(database=database)
+    print("GRANT ACQUIRED VIA X402 (rights holder: rightsrelay-demo)")
+    transaction = persisted.x402_tx or ""
+    if re.fullmatch(r"0x[0-9a-fA-F]{64}", transaction):
+        explorer = (
+            "https://basescan.org/tx/"
+            if os.environ.get("RIGHTSRELAY_X402_MAINNET") == "1"
+            else "https://sepolia.basescan.org/tx/"
+        )
+        print(f"EXPLORER: {explorer}{transaction}")
+    else:
+        print(f"SETTLEMENT IDENTIFIER: {transaction}")
+    _print_entity(persisted)
     return 0
 
 

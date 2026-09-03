@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
@@ -24,6 +25,7 @@ class Journal:
         reasons: list[str] | None = None,
         acp_job_id: str | None = None,
         x402_tx: str | None = None,
+        metadata: Mapping[str, Any] | None = None,
         ts: str | None = None,
     ) -> str:
         reason_list = list(reasons or [])
@@ -37,6 +39,9 @@ class Journal:
             extra["acp_job_id"] = acp_job_id
         if x402_tx is not None:
             extra["x402_tx"] = x402_tx
+        for key, value in (metadata or {}).items():
+            if key not in extra:
+                extra[key] = value
 
         return self._client.write_event(
             evaluated={

@@ -14,6 +14,8 @@ def _run_cli(
 ) -> subprocess.CompletedProcess[str]:
     environment = os.environ.copy()
     environment["RIGHTSRELAY_DB"] = str(database)
+    environment.pop("RIGHTSRELAY_BUYER_KEY", None)
+    environment.pop("RIGHTSRELAY_X402_MAINNET", None)
     return subprocess.run(
         [sys.executable, "-m", "rightsrelay", *arguments],
         cwd=workdir,
@@ -121,11 +123,14 @@ def test_attempt_without_authorization_exits_two(tmp_path) -> None:
     assert not (tmp_path / "release-packets").exists()
 
 
-def test_acquire_grant_is_an_explicit_unwired_stub(tmp_path) -> None:
+def test_acquire_grant_without_a_buyer_key_fails_clearly(tmp_path) -> None:
     database = tmp_path / "data" / "rightsrelay.sqlite"
 
     result = _run_cli(tmp_path, database, "acquire-grant")
 
     assert result.returncode != 0
     assert f"DB: {database}" in result.stdout
-    assert "NotImplementedError: x402 not wired" in result.stderr
+    assert (
+        "RuntimeError: RIGHTSRELAY_BUYER_KEY is required to pay for the grant"
+        in result.stderr
+    )

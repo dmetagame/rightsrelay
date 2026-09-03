@@ -13,8 +13,8 @@ RightsRelay is release-operations software, not legal advice.
 ## Current checkpoint
 
 The deterministic gate, Sibyl persistence wrapper, COLD journal adapter,
-fail-closed export, and filmable cross-process CLI are implemented. The UI and
-partner integrations are intentionally not part of this checkpoint.
+fail-closed export, cross-process CLI, and official-package x402 seller/buyer
+are implemented. The UI, LLM, and Virtuals ACP are out of scope.
 
 ## Run the core
 
@@ -59,12 +59,17 @@ Open a new shell, export the same database path, and run Session 2:
 export RIGHTSRELAY_DB="$(pwd)/data/rightsrelay.sqlite"
 .venv/bin/python -m rightsrelay status
 .venv/bin/python -m rightsrelay attempt --channel instagram --paid --territories US,UK --date 2026-09-02
+.venv/bin/python -m rightsrelay acquire-grant
+.venv/bin/python -m rightsrelay attempt --channel instagram --paid --territories US,UK --date 2026-09-02
+.venv/bin/python -m rightsrelay status
 ```
 
-The attempt exits 1, prints `BLOCKED` with reasons, and writes no packet. The
-same sequence is packaged as `./scripts/demo_session1.sh` and
-`./scripts/demo_session2.sh`; Session 1 intentionally waits so its printed PID
-can be killed. The shot list is `scripts/record_demo.md`.
+The first attempt exits 1, prints `BLOCKED` with reasons, and writes no packet.
+After a successful x402 purchase updates the same WARM authorization, the
+identical attempt prints `CLEARED` and writes
+`release-packets/campaign-aurora-neon-drive.json`. The sequence is packaged as
+`./scripts/demo_session1.sh` and `./scripts/demo_session2.sh`; Session 1 waits
+so its printed PID can be killed. The shot list is `scripts/record_demo.md`.
 
 `apply-grant` exists only as the deterministic mutation boundary for tests and
 the later successful x402 path:
@@ -73,8 +78,49 @@ the later successful x402 path:
 .venv/bin/python -m rightsrelay apply-grant --paid --channels instagram --territories US,UK --expires 2026-10-31
 ```
 
-`acquire-grant` currently raises `NotImplementedError("x402 not wired")`; it
-does not simulate a payment or grant.
+The direct `apply-grant` command is not a payment simulation and must not be
+shown as x402. `acquire-grant` is the only filmed payment path.
+
+## Base Sepolia x402 setup
+
+Demo settles on Base Sepolia via x402.org facilitator; we are the rights holder
+for this track. The original track is `Neon Drive`, and the paid endpoint is
+operated by `rightsrelay-demo`. No BMI, Meta, TikTok, or other third-party
+rights/platform API is claimed.
+
+Create `.env` from `.env.example` and provide:
+
+- `RIGHTSRELAY_PAY_TO`: the seller's 20-byte EVM address.
+- `RIGHTSRELAY_BUYER_KEY`: the buyer wallet's hex private key. Never commit it.
+- `RIGHTSRELAY_SELLER_URL`: seller base URL; defaults to
+  `http://127.0.0.1:8402`.
+- `RIGHTSRELAY_DB`: shared Sibyl SQLite path.
+
+Fund the buyer address with Base Sepolia test ETH and USDC. Base lists its
+[official testnet funding options](https://docs.base.org/get-started/get-funds),
+and test USDC is available from the [Circle faucet](https://faucet.circle.com/)
+by selecting Base Sepolia. Testnet funds have no monetary value.
+
+Load the variables without printing secret values, then start the rights-holder
+server in one terminal:
+
+```bash
+set -a
+source .env
+set +a
+./scripts/run_seller.sh
+```
+
+In another terminal, run `./scripts/demo_session2.sh` after completing Session
+1. The buyer performs an unpaid GET, parses the middleware-generated
+`PAYMENT-REQUIRED`, signs with the configured wallet, retries, validates the
+real `PAYMENT-RESPONSE`, and only then mutates the authorization. If settlement
+fails, no grant is applied.
+
+Mainnet is off by default. Enabling it requires both
+`RIGHTSRELAY_X402_MAINNET=1` and a production
+`RIGHTSRELAY_MAINNET_FACILITATOR`; the test-only x402.org facilitator is never
+used for mainnet. This checkpoint has not been tested or claimed on mainnet.
 
 ## Where memory is load-bearing
 
@@ -91,7 +137,11 @@ Critical paths at this checkpoint:
 - WARM read: `src/rightsrelay/memory.py:47` — `get_entity`
 - Pure policy: `src/rightsrelay/gate.py:6` — `can_release`
 - Export boundary: `src/rightsrelay/export.py:22` — `build_release_packet`
-- COLD journal write: `src/rightsrelay/journal.py:41` — `write_event`
+- COLD journal write: `src/rightsrelay/journal.py:46` — `write_event`
+- x402 payment route: `src/rightsrelay/x402_seller.py:127` — protected route
+- Paid grant handler: `src/rightsrelay/x402_seller.py:147` — grant JSON
+- Apply after payment: `src/rightsrelay/app.py:259` — calls the shared
+  `apply_grant` mutation path only after the buyer returns a settled grant
 
 Tenant, entity kind, and entity name are fixed in `src/rightsrelay/memory.py`:
 `rightsrelay`, `UseAuthorization`, and `campaign-aurora:neon-drive`.
@@ -104,13 +154,16 @@ status, and reasons plus `acp_job_id` and `x402_tx` when present.
 
 ## Partner stacks
 
-None are claimed at this checkpoint.
+- **Base/x402:** implemented with the official `x402==2.21.0` Python package.
+  Automated tests exercise the real middleware's HTTP 402 response. The funded
+  Base Sepolia round-trip is an integration test that skips unless
+  `RIGHTSRELAY_BUYER_KEY` and `RIGHTSRELAY_PAY_TO` are present; do not claim the
+  hackathon multiplier until a real settlement is recorded on screen.
+- **Virtuals ACP:** not implemented or claimed.
 
-- **Base/x402:** not implemented or exercised yet.
-- **Virtuals ACP:** not implemented or exercised yet.
-
-No mock ACP or x402 implementation is present. A stack will be named here only
-after its real lifecycle is exercised and filmable.
+The runtime path never fabricates a successful payment response or transaction
+hash. When the facilitator does not return a transaction hash, RightsRelay
+stores and prints the actual settlement payload instead of inventing one.
 
 ## How memory made this possible
 

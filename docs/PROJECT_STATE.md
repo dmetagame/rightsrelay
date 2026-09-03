@@ -3,8 +3,8 @@
 > Living handoff for Codex sessions. Read this file before working. Do not put
 > secrets or raw credential-bearing values here.
 
-Last updated: `2026-09-03T08:15:00+01:00`
-Status: `IN_PROGRESS`
+Last updated: `2026-09-03T08:24:35+01:00`
+Status: `IMPLEMENTED_PENDING_FUNDED_INTEGRATION`
 Active objective: Replace the explicit x402 stub with an official-package Base Sepolia seller/buyer flow, reuse the existing same-entity grant mutation, and preserve the frozen core.
 
 ## Workspace
@@ -12,7 +12,8 @@ Active objective: Replace the explicit x402 stub with an official-package Base S
 - Repository: local Git repository; no remote configured yet
 - Worktree: `/home/rouma/rightsrelay`
 - Branch: `main`
-- Commit: `0919d8f` (`docs: record CLI checkpoint`)
+- Commit: `aa9bace` (`feat: add Base Sepolia x402 seller`), with the buyer,
+  CLI wiring, and demo completion ready for the next local checkpoint
 - Protected releases/artifacts: `src/rightsrelay/gate.py`, `src/rightsrelay/models.py`, and existing MemoryClient call shapes are frozen unless an existing test turns red; partner integrations and UI are out of scope
 
 ## Constraints
@@ -38,6 +39,20 @@ Active objective: Replace the explicit x402 stub with an official-package Base S
 - Confirmed the official buyer stack from installed source and upstream examples: `x402Client`, `register_exact_evm_client`, `EthAccountSigner`, and `x402HTTPClient`/httpx transport helpers. Settlement is decoded from the real `PAYMENT-RESPONSE` header.
 - Added the Base Sepolia rights-holder seller factory with fixed testnet network `eip155:84532`, facilitator `https://x402.org/facilitator`, price `$0.001`, and env-provided pay-to address. Mainnet remains gated off behind explicit environment configuration.
 - Proved the paid grant route returns an actual HTTP 402 and non-empty middleware-generated `PAYMENT-REQUIRED` header both in its isolated HTTP test and with `curl -i` against the live x402.org testnet facilitator.
+- Added the official buyer flow using `x402Client`, `EthAccountSigner`,
+  `register_exact_evm_client`, and `x402HTTPClient`: unpaid GET, package-generated
+  payment headers, paid retry, and decoded `PAYMENT-RESPONSE` settlement.
+- Replaced the `acquire-grant` stub. A successful settled grant now invokes the
+  existing shared `apply_grant` path exactly once, rewrites the same WARM entity,
+  and journals network, facilitator, price, and actual settlement identifier.
+- Added settlement propagation to the paid grant response. A transaction hash
+  is linked only when the facilitator supplies a real 32-byte hash; otherwise
+  the actual settlement payload is stored and printed.
+- Added `.env.example`, `scripts/run_seller.sh`, and the complete Session 2
+  BLOCKED → HTTP 402 → payment → CLEARED script and shot list. The script refuses
+  to run over an existing release packet.
+- Documented official Base/Circle testnet funding sources, environment setup,
+  the rights-holder disclosure, mainnet-off policy, and exact x402 code paths.
 - Inspected the installed SDK source: `write_event` is keyword-only over `evaluated`, `acted`, `forward`, `extra`, and `ts`; `read_events` exists and returns decoded event dictionaries.
 - Added `src/rightsrelay/journal.py`, mapping authorization event/status/reasons into the four Sibyl journal payloads and placing entity name, status, reasons, and present partner identifiers in `extra`.
 - Added a real temporary-database journal test that writes through `write_event` and verifies the decoded `read_events` result.
@@ -79,27 +94,37 @@ Active objective: Replace the explicit x402 stub with an official-package Base S
 | Final diff hygiene | passed | `git diff --check`, 2026-09-02 |
 | x402 package inspection | passed | `x402==2.21.0`; official package source and upstream Python examples agree on seller/buyer symbols, 2026-09-03 |
 | Seller unpaid HTTP | passed | `pytest tests/test_x402_grant.py -q` → `1 passed`; live `curl -i` → HTTP 402 with `PAYMENT-REQUIRED`, 2026-09-03 |
+| x402 tests | partial/pass | `tests/test_x402_grant.py` → `3 passed, 1 skipped`; funded settlement test skipped because wallet/pay-to variables are absent, 2026-09-03 |
+| Full suite after x402 | passed | `.venv/bin/pytest -q` → `18 passed, 1 skipped in 4.83s`; skip is the funded Base Sepolia integration only, 2026-09-03 |
+| Demo scripts after x402 | passed | `bash -n scripts/demo_session1.sh scripts/demo_session2.sh scripts/run_seller.sh`, 2026-09-03 |
+| Python compilation after x402 | passed | `.venv/bin/python -m compileall -q src tests scripts`; generated project bytecode removed, 2026-09-03 |
+| x402 diff hygiene | passed | `git diff --check`, 2026-09-03 |
 
 ## Risks And Blockers
 
 - No Git remote is configured, so checkpoints can be committed locally but not pushed.
 - GitHub CLI authentication reports invalid; no authentication change was attempted because this turn forbids pushing and remote creation.
 - README file:line references are exact for this checkpoint and must be updated if `memory.py`, `gate.py`, or `export.py` shifts.
-- Virtuals ACP and x402 remain deliberately unwired and unclaimed. `acquire-grant` raises `NotImplementedError("x402 not wired")`.
-- A real Base Sepolia buyer payment cannot be claimed until `RIGHTSRELAY_BUYER_KEY` and a funded seller address are supplied; no credential is currently present in the project.
+- Virtuals ACP remains deliberately unwired and unclaimed.
+- The x402 runtime is wired, but a real Base Sepolia settlement cannot yet be
+  claimed: neither `RIGHTSRELAY_BUYER_KEY` nor `RIGHTSRELAY_PAY_TO` is present.
+  No payment was attempted and no transaction exists from this checkpoint.
 
 ## Next Actions
 
-1. Install and inspect the official `x402[fastapi]` package, recording exact seller and buyer APIs.
-2. Drive the real unpaid HTTP 402 and failure-without-mutation behavior test-first.
-3. Wire Base Sepolia payment and reuse the existing grant-application boundary; keep live payment skippable when wallet funding is unavailable.
+1. Fund a dedicated buyer with Base Sepolia test ETH and USDC; configure a
+   seller pay-to address without recording either private key.
+2. Run `tests/test_x402_grant.py::test_real_base_sepolia_buyer_round_trip` and
+   record the real facilitator settlement/transaction.
+3. Rehearse `scripts/demo_session2.sh` from a clean packet destination, then
+   film the unedited red-to-green take. Do not claim Base until this succeeds.
 
 ## Session Handoff
 
 - Start with this file and `git status --short --branch`.
 - Verification command: `.venv/bin/pytest -q`.
 - Treat `src/rightsrelay/gate.py`, `src/rightsrelay/models.py`, and the existing MemoryClient call shapes as frozen unless a test turns red.
-- Do not begin UI, ACP, or x402 implementation without a new authorized continuation.
+- Do not begin UI or ACP work without a new authorized continuation.
 
 ## Change Log
 
@@ -114,3 +139,4 @@ Active objective: Replace the explicit x402 stub with an official-package Base S
 | 2026-09-02T21:18:30+01:00 | Codex | Created local CLI checkpoint | Commit `847ab39`; no push attempted because the user forbade pushing and no remote exists |
 | 2026-09-02T21:25:00+01:00 | Codex | Reconciled handoff and began x402-only checkpoint | Actual clean HEAD was state-only commit `0919d8f`; frozen policy/models remain protected; no remote/push |
 | 2026-09-03T08:15:00+01:00 | Codex | Completed x402 seller 402 tracer | Official middleware emitted HTTP 402 and `PAYMENT-REQUIRED` through live testnet facilitator; no payment attempted |
+| 2026-09-03T08:24:35+01:00 | Codex | Completed x402 runtime and demo wiring | 18 tests passed; funded Base Sepolia integration skipped because wallet/pay-to variables are absent; frozen core untouched |

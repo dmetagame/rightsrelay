@@ -1,13 +1,19 @@
 from __future__ import annotations
 
+import json
 import os
 import re
 from dataclasses import dataclass
+from typing import Any
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response
 from x402.http import FacilitatorConfig, HTTPFacilitatorClient, PaymentOption
 from x402.http.middleware.fastapi import PaymentMiddlewareASGI
 from x402.http.types import RouteConfig
+from x402.http.utils import decode_payment_response_header
 from x402.mechanisms.evm.exact import ExactEvmServerScheme
 from x402.server import x402ResourceServer
 
@@ -26,6 +32,56 @@ class SellerSettings:
     network: str
     facilitator_url: str
     price: str = PRICE
+
+
+class SettlementGrantMiddleware(BaseHTTPMiddleware):
+    """Attach the facilitator's completed settlement to the issued grant."""
+
+    async def dispatch(self, request: Request, call_next) -> Response:
+        response = await call_next(request)
+        if request.url.path != GRANT_PATH or response.status_code != 200:
+            return response
+
+        encoded_settlement = response.headers.get("payment-response")
+        if not encoded_settlement:
+            return JSONResponse(
+                status_code=502,
+                content={"error": "paid grant response omitted PAYMENT-RESPONSE"},
+            )
+        settlement = decode_payment_response_header(encoded_settlement)
+        if not settlement.success:
+            return JSONResponse(
+                status_code=502,
+                content={"error": "facilitator reported unsuccessful settlement"},
+            )
+
+        body = b"".join([chunk async for chunk in response.body_iterator])
+        grant = json.loads(body)
+        settlement_payload = settlement.model_dump(
+            mode="json",
+            by_alias=True,
+            exclude_none=True,
+        )
+        transaction = (
+            settlement.transaction.strip()
+            if isinstance(settlement.transaction, str)
+            else ""
+        )
+        grant["x402_tx"] = transaction or json.dumps(
+            settlement_payload,
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        headers = {
+            key: value
+            for key, value in response.headers.items()
+            if key.lower() not in {"content-length", "content-type"}
+        }
+        return JSONResponse(
+            status_code=response.status_code,
+            content=grant,
+            headers=headers,
+        )
 
 
 def seller_settings(*, pay_to: str | None = None) -> SellerSettings:
@@ -86,6 +142,7 @@ def create_app(
         routes=routes,
         server=server,
     )
+    app.add_middleware(SettlementGrantMiddleware)
 
     @app.get(GRANT_PATH)
     async def issue_grant() -> dict[str, object]:
