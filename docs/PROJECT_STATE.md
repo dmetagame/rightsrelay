@@ -3,7 +3,7 @@
 > Living handoff for Codex sessions. Read this file before working. Do not put
 > secrets or raw credential-bearing values here.
 
-Last updated: `2026-09-04T00:07:32+01:00`
+Last updated: `2026-09-04T00:10:26+01:00`
 Status: `FUNDED_X402_VERIFIED`
 Active objective: Completed—funding and two real Base Sepolia x402 settlements are verified, including the full CLI BLOCKED → purchase → CLEARED path, without changing frozen product logic or exposing local credentials.
 
@@ -15,6 +15,7 @@ Active objective: Completed—funding and two real Base Sepolia x402 settlements
 - Upstream: `origin/main`
 - Implementation checkpoint: `03cf2b1` (`feat: add filmable release demo console`)
 - Local wallet-setup metadata checkpoint: `2d3c697` (`chore: add buyer address env placeholder`), verified on `origin/main`
+- Funded x402 evidence checkpoint: `33ea6c3` (`docs: record funded x402 verification`), verified on `origin/main`
 - Protected releases/artifacts: `src/rightsrelay/gate.py`, `src/rightsrelay/models.py`, existing MemoryClient call shapes, and both x402/ACP adapters are frozen unless an existing test turns red
 
 ## Constraints
@@ -272,3 +273,4 @@ Active objective: Completed—funding and two real Base Sepolia x402 settlements
 | 2026-09-03T22:36:31+01:00 | Codex | Published non-secret wallet setup metadata | Commit `2d3c697` reached `origin/main`; local and remote SHAs matched; `.env` remained ignored and untracked |
 | 2026-09-04T00:03:16+01:00 | Codex | Began funded Base Sepolia x402 verification | Clean `origin/main` tracking branch at `ec2ce40`; ignored mode-`0600` `.env` present; user reports wallets funded |
 | 2026-09-04T00:07:32+01:00 | Codex | Verified funded x402 integration and CLI path | Two real `$0.001` Base Sepolia USDC settlements confirmed; CLI changed identical attempt from BLOCKED/no packet to CLEARED/packet; only ACP remains live-skipped |
+| 2026-09-04T00:10:26+01:00 | Codex | Published funded x402 evidence | Commit `33ea6c3` matched `origin/main`; tracked 64-byte hex scan remained empty and local `.env` remained ignored |
