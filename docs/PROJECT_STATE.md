@@ -3,16 +3,16 @@
 > Living handoff for Codex sessions. Read this file before working. Do not put
 > secrets or raw credential-bearing values here.
 
-Last updated: `2026-09-02T21:18:30+01:00`
-Status: `COMPLETE`
-Active objective: Completed the real Sibyl journal adapter, filmable CLI, blocked-only demo scripts, subprocess CLI tests, and exact README commands while preserving the frozen core.
+Last updated: `2026-09-03T08:15:00+01:00`
+Status: `IN_PROGRESS`
+Active objective: Replace the explicit x402 stub with an official-package Base Sepolia seller/buyer flow, reuse the existing same-entity grant mutation, and preserve the frozen core.
 
 ## Workspace
 
 - Repository: local Git repository; no remote configured yet
 - Worktree: `/home/rouma/rightsrelay`
 - Branch: `main`
-- Commit: `847ab39` (`feat: add filmable RightsRelay CLI`)
+- Commit: `0919d8f` (`docs: record CLI checkpoint`)
 - Protected releases/artifacts: `src/rightsrelay/gate.py`, `src/rightsrelay/models.py`, and existing MemoryClient call shapes are frozen unless an existing test turns red; partner integrations and UI are out of scope
 
 ## Constraints
@@ -26,7 +26,7 @@ Active objective: Completed the real Sibyl journal adapter, filmable CLI, blocke
 
 ## Current Context
 
-- This turn is restricted to `journal.py`, CLI/entrypoint, two blocked-only demo scripts, the recording shot list, two new test files, and README updates.
+- This turn is x402-only: official Python package inspection, Base Sepolia seller/buyer, CLI wiring, demo Session 2 update, x402 tests, environment template, and README documentation.
 - GitHub CLI authentication currently reports invalid and no remote exists. Pushing or creating a remote is explicitly forbidden this turn.
 - `sibyl-memory-client` was not installed globally when work started.
 - The official Sibyl repository documents local-first, unactivated SDK operation and WARM uniqueness by `(tenant_id, category, name)`.
@@ -34,6 +34,10 @@ Active objective: Completed the real Sibyl journal adapter, filmable CLI, blocke
 
 ## Work Completed
 
+- Installed and inspected official `x402==2.21.0`. The FastAPI extra alone does not load the EVM scheme; the package explicitly requires its `evm` extra as well.
+- Confirmed the official buyer stack from installed source and upstream examples: `x402Client`, `register_exact_evm_client`, `EthAccountSigner`, and `x402HTTPClient`/httpx transport helpers. Settlement is decoded from the real `PAYMENT-RESPONSE` header.
+- Added the Base Sepolia rights-holder seller factory with fixed testnet network `eip155:84532`, facilitator `https://x402.org/facilitator`, price `$0.001`, and env-provided pay-to address. Mainnet remains gated off behind explicit environment configuration.
+- Proved the paid grant route returns an actual HTTP 402 and non-empty middleware-generated `PAYMENT-REQUIRED` header both in its isolated HTTP test and with `curl -i` against the live x402.org testnet facilitator.
 - Inspected the installed SDK source: `write_event` is keyword-only over `evaluated`, `acted`, `forward`, `extra`, and `ts`; `read_events` exists and returns decoded event dictionaries.
 - Added `src/rightsrelay/journal.py`, mapping authorization event/status/reasons into the four Sibyl journal payloads and placing entity name, status, reasons, and present partner identifiers in `extra`.
 - Added a real temporary-database journal test that writes through `write_event` and verifies the decoded `read_events` result.
@@ -73,6 +77,8 @@ Active objective: Completed the real Sibyl journal adapter, filmable CLI, blocke
 | Demo scripts | passed | `bash -n scripts/demo_session1.sh scripts/demo_session2.sh`, 2026-09-02 |
 | Python compilation after CLI | passed | `.venv/bin/python -m compileall -q src tests scripts`; generated project `__pycache__` directories removed, 2026-09-02 |
 | Final diff hygiene | passed | `git diff --check`, 2026-09-02 |
+| x402 package inspection | passed | `x402==2.21.0`; official package source and upstream Python examples agree on seller/buyer symbols, 2026-09-03 |
+| Seller unpaid HTTP | passed | `pytest tests/test_x402_grant.py -q` → `1 passed`; live `curl -i` → HTTP 402 with `PAYMENT-REQUIRED`, 2026-09-03 |
 
 ## Risks And Blockers
 
@@ -80,12 +86,13 @@ Active objective: Completed the real Sibyl journal adapter, filmable CLI, blocke
 - GitHub CLI authentication reports invalid; no authentication change was attempted because this turn forbids pushing and remote creation.
 - README file:line references are exact for this checkpoint and must be updated if `memory.py`, `gate.py`, or `export.py` shifts.
 - Virtuals ACP and x402 remain deliberately unwired and unclaimed. `acquire-grant` raises `NotImplementedError("x402 not wired")`.
+- A real Base Sepolia buyer payment cannot be claimed until `RIGHTSRELAY_BUYER_KEY` and a funded seller address are supplied; no credential is currently present in the project.
 
 ## Next Actions
 
-1. Stop at this checkpoint as requested.
-2. In a separately authorized turn, wire live x402 only after confirming the qualifying Base environment; keep `apply-grant` as the successful mutation boundary.
-3. Add Virtuals ACP only if a real request-through-evaluation lifecycle can be completed and filmed.
+1. Install and inspect the official `x402[fastapi]` package, recording exact seller and buyer APIs.
+2. Drive the real unpaid HTTP 402 and failure-without-mutation behavior test-first.
+3. Wire Base Sepolia payment and reuse the existing grant-application boundary; keep live payment skippable when wallet funding is unavailable.
 
 ## Session Handoff
 
@@ -105,3 +112,5 @@ Active objective: Completed the real Sibyl journal adapter, filmable CLI, blocke
 | 2026-09-02T21:10:42+01:00 | Codex | Completed real Sibyl journal adapter | `write_event` mapping verified through `read_events`; journal test passed |
 | 2026-09-02T21:17:24+01:00 | Codex | Completed filmable CLI checkpoint | 15 tests passed; cross-process BLOCKED/no-packet and CLEARED/packet paths verified; demo remains honest about unwired partners |
 | 2026-09-02T21:18:30+01:00 | Codex | Created local CLI checkpoint | Commit `847ab39`; no push attempted because the user forbade pushing and no remote exists |
+| 2026-09-02T21:25:00+01:00 | Codex | Reconciled handoff and began x402-only checkpoint | Actual clean HEAD was state-only commit `0919d8f`; frozen policy/models remain protected; no remote/push |
+| 2026-09-03T08:15:00+01:00 | Codex | Completed x402 seller 402 tracer | Official middleware emitted HTTP 402 and `PAYMENT-REQUIRED` through live testnet facilitator; no payment attempted |

@@ -13,6 +13,7 @@ authors = [{ name = "RightsRelay contributors" }]
 dependencies = [
   "pydantic>=2.13,<3",
   "sibyl-memory-client>=0.8,<0.9",
+  "x402[evm,fastapi,httpx]>=2.21,<3",
 ]
 
 [project.optional-dependencies]
