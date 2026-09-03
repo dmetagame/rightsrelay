@@ -3,7 +3,7 @@
 > Living handoff for Codex sessions. Read this file before working. Do not put
 > secrets or raw credential-bearing values here.
 
-Last updated: `2026-09-03T11:16:04+01:00`
+Last updated: `2026-09-03T11:16:29+01:00`
 Status: `IMPLEMENTED_PENDING_ACP_REGISTRATION`
 Active objective: Add the real Virtuals ACP reviewer coordination path while preserving the frozen gate, models, MemoryClient call shapes, and completed x402 path.
 
@@ -12,7 +12,8 @@ Active objective: Add the real Virtuals ACP reviewer coordination path while pre
 - Repository: local Git repository; no remote configured yet
 - Worktree: `/home/rouma/rightsrelay`
 - Branch: `main`
-- Current commit: `4552eaf` (`docs: record x402 checkpoint`)
+- Implementation checkpoint: `160f3f3` (`feat: add Virtuals ACP rights review
+  flow`); the state-only handoff commit sits directly above it
 - Protected releases/artifacts: `src/rightsrelay/gate.py`, `src/rightsrelay/models.py`, and existing MemoryClient call shapes are frozen unless an existing test turns red; partner integrations and UI are out of scope
 
 ## Constraints
@@ -186,3 +187,4 @@ Active objective: Add the real Virtuals ACP reviewer coordination path while pre
 | 2026-09-03T08:30:00+01:00 | Codex | Reconciled handoff and began Virtuals ACP checkpoint | Clean `main` at `4552eaf`; frozen core and completed x402 path protected; GitHub auth remains invalid and no remote exists |
 | 2026-09-03T10:36:38+01:00 | Codex | Completed offline ACP provider tracer | Real shared-entity mutation and fresh-process recall passed; current SDK lifecycle drift documented |
 | 2026-09-03T11:14:46+01:00 | Codex | Completed ACP code and fail-closed demo wiring | 20 tests passed; two funded integrations skipped; no credentials or real ACP job ID available |
+| 2026-09-03T11:16:29+01:00 | Codex | Created local Virtuals ACP implementation checkpoint | Commit `160f3f3`; no push possible because no remote exists and GitHub authentication is invalid |
