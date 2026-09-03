@@ -3,13 +3,13 @@
 > Living handoff for Codex sessions. Read this file before working. Do not put
 > secrets or raw credential-bearing values here.
 
-Last updated: `2026-09-03T15:15:00+01:00`
-Status: `DEMO_CONSOLE_COMPLETE`
-Active objective: Complete and verify the filmable one-page demo console and submission pack while preserving the frozen core, x402 path, and ACP adapters.
+Last updated: `2026-09-03T20:56:41+01:00`
+Status: `PUBLICATION_IN_PROGRESS`
+Active objective: Verify the complete build, rehearse the offline kill/recall flow, create a public GitHub repository, and push a clean tracking branch without changing frozen product logic.
 
 ## Workspace
 
-- Repository: local Git repository; no remote configured yet
+- Repository: public GitHub repository at `https://github.com/dmetagame/rightsrelay`
 - Worktree: `/home/rouma/rightsrelay`
 - Branch: `main`
 - Implementation checkpoint: `03cf2b1` (`feat: add filmable release demo console`)
@@ -26,11 +26,11 @@ Active objective: Complete and verify the filmable one-page demo console and sub
 
 ## Current Context
 
-- This turn is limited to the demo console, console-status tests, demo shot list,
-  submission README, and repository handoff artifacts. No new protocol or
-  business-logic path is authorized.
-- GitHub CLI authentication currently reports invalid and no remote exists, so
-  a verified remote backup is unavailable.
+- This turn is limited to verification, offline rehearsal, publication hygiene,
+  README repository URL, and public GitHub publication. Frozen product logic
+  and partner lifecycles remain read-only unless an existing test fails.
+- GitHub device authorization succeeded as `dmetagame`; public HTTPS remote
+  `origin` now points to `https://github.com/dmetagame/rightsrelay.git`.
 - `sibyl-memory-client` was not installed globally when work started.
 - The official Sibyl repository documents local-first, unactivated SDK operation and WARM uniqueness by `(tenant_id, category, name)`.
 - User-confirmed test seams are `can_release`, fail-closed export, and cross-process Sibyl persistence.
@@ -211,3 +211,4 @@ Active objective: Complete and verify the filmable one-page demo console and sub
 | 2026-09-03T15:03:00+01:00 | Codex | Reconciled handoff and began demo-console checkpoint | Clean `main` at `e95e1a8`; frozen core and partner adapters protected; no remote/push work authorized |
 | 2026-09-03T15:13:22+01:00 | Codex | Completed demo console and submission pack | 22 tests passed, two funded integrations skipped; real process-restart scripts and four-minute shot list verified |
 | 2026-09-03T15:15:00+01:00 | Codex | Created local demo-console checkpoint | Commit `03cf2b1`; no push attempted because no remote exists, GitHub authentication is invalid, and this turn forbids remote work |
+| 2026-09-03T20:56:41+01:00 | Codex | Began end-to-end verification and publication | GitHub authentication restored as `dmetagame`; public repository created; sensitive-path history audit clean; required ignore patterns completed |

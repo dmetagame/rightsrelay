@@ -2,6 +2,8 @@
 
 RightsRelay is release-operations software, not legal advice.
 
+Public repository: https://github.com/dmetagame/rightsrelay
+
 ## What it does
 
 RightsRelay stores one mutable authorization for the original track `Neon
