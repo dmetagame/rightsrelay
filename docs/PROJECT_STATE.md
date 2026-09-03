@@ -3,7 +3,7 @@
 > Living handoff for Codex sessions. Read this file before working. Do not put
 > secrets or raw credential-bearing values here.
 
-Last updated: `2026-09-03T08:24:35+01:00`
+Last updated: `2026-09-03T08:25:51+01:00`
 Status: `IMPLEMENTED_PENDING_FUNDED_INTEGRATION`
 Active objective: Replace the explicit x402 stub with an official-package Base Sepolia seller/buyer flow, reuse the existing same-entity grant mutation, and preserve the frozen core.
 
@@ -12,8 +12,8 @@ Active objective: Replace the explicit x402 stub with an official-package Base S
 - Repository: local Git repository; no remote configured yet
 - Worktree: `/home/rouma/rightsrelay`
 - Branch: `main`
-- Commit: `aa9bace` (`feat: add Base Sepolia x402 seller`), with the buyer,
-  CLI wiring, and demo completion ready for the next local checkpoint
+- Implementation checkpoint: `7444ce1` (`feat: complete Base Sepolia x402
+  grant flow`); the state-only handoff commit sits directly above it
 - Protected releases/artifacts: `src/rightsrelay/gate.py`, `src/rightsrelay/models.py`, and existing MemoryClient call shapes are frozen unless an existing test turns red; partner integrations and UI are out of scope
 
 ## Constraints
@@ -95,7 +95,7 @@ Active objective: Replace the explicit x402 stub with an official-package Base S
 | x402 package inspection | passed | `x402==2.21.0`; official package source and upstream Python examples agree on seller/buyer symbols, 2026-09-03 |
 | Seller unpaid HTTP | passed | `pytest tests/test_x402_grant.py -q` → `1 passed`; live `curl -i` → HTTP 402 with `PAYMENT-REQUIRED`, 2026-09-03 |
 | x402 tests | partial/pass | `tests/test_x402_grant.py` → `3 passed, 1 skipped`; funded settlement test skipped because wallet/pay-to variables are absent, 2026-09-03 |
-| Full suite after x402 | passed | `.venv/bin/pytest -q` → `18 passed, 1 skipped in 4.83s`; skip is the funded Base Sepolia integration only, 2026-09-03 |
+| Full suite after x402 | passed | `.venv/bin/pytest -q` → `18 passed, 1 skipped in 4.67s`; skip is the funded Base Sepolia integration only, 2026-09-03 |
 | Demo scripts after x402 | passed | `bash -n scripts/demo_session1.sh scripts/demo_session2.sh scripts/run_seller.sh`, 2026-09-03 |
 | Python compilation after x402 | passed | `.venv/bin/python -m compileall -q src tests scripts`; generated project bytecode removed, 2026-09-03 |
 | x402 diff hygiene | passed | `git diff --check`, 2026-09-03 |
@@ -140,3 +140,4 @@ Active objective: Replace the explicit x402 stub with an official-package Base S
 | 2026-09-02T21:25:00+01:00 | Codex | Reconciled handoff and began x402-only checkpoint | Actual clean HEAD was state-only commit `0919d8f`; frozen policy/models remain protected; no remote/push |
 | 2026-09-03T08:15:00+01:00 | Codex | Completed x402 seller 402 tracer | Official middleware emitted HTTP 402 and `PAYMENT-REQUIRED` through live testnet facilitator; no payment attempted |
 | 2026-09-03T08:24:35+01:00 | Codex | Completed x402 runtime and demo wiring | 18 tests passed; funded Base Sepolia integration skipped because wallet/pay-to variables are absent; frozen core untouched |
+| 2026-09-03T08:25:51+01:00 | Codex | Created local x402 implementation checkpoint | Commit `7444ce1`; no push attempted because no remote exists and this turn forbids creating one |
