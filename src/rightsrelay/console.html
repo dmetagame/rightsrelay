@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RightsRelay — Release Gate</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --carbon: #0b0d10;
+      --panel: #14181d;
+      --raised: #1c2229;
+      --rule: #343c46;
+      --ink: #f4f7f9;
+      --muted: #94a0ad;
+      --red: #ff5a5f;
+      --green: #4de3b2;
+      --amber: #ffbc42;
+      --cyan: #68c8ff;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+    body { background: var(--carbon); color: var(--ink); }
+    button, a { font: inherit; }
+    a { color: var(--cyan); text-underline-offset: 3px; }
+
+    .board {
+      width: 100vw;
+      height: 100dvh;
+      min-height: 640px;
+      display: grid;
+      grid-template-rows: 58px minmax(0, 1fr) 104px;
+      background:
+        linear-gradient(90deg, rgba(104, 200, 255, .035) 1px, transparent 1px) 0 0 / 42px 42px,
+        var(--carbon);
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: 220px 1fr auto;
+      align-items: center;
+      gap: 18px;
+      padding: 0 22px;
+      border-bottom: 1px solid var(--rule);
+      background: rgba(11, 13, 16, .96);
+    }
+
+    .brand { font-family: "Arial Narrow", "Roboto Condensed", sans-serif; font-size: 24px; font-weight: 900; letter-spacing: -.03em; }
+    .brand span { color: var(--cyan); }
+    .entity { overflow: hidden; color: var(--muted); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+    .meta { display: flex; align-items: center; gap: 18px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; text-transform: uppercase; }
+    .meta b { color: var(--muted); font-weight: 500; }
+    .live-dot { width: 8px; height: 8px; display: inline-block; margin-right: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 14px rgba(77, 227, 178, .7); }
+
+    main {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(360px, 1.08fr) minmax(280px, .78fr) minmax(350px, 1fr);
+      gap: 10px;
+      padding: 10px;
+    }
+
+    .panel { min-width: 0; min-height: 0; border: 1px solid var(--rule); background: rgba(20, 24, 29, .96); }
+    .panel-title { height: 34px; display: flex; align-items: center; justify-content: space-between; padding: 0 13px; border-bottom: 1px solid var(--rule); color: var(--muted); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+    .panel-title > span:first-child { flex: 0 0 auto; }
+    .panel-title > span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .gate-panel { display: grid; grid-template-rows: 34px minmax(150px, 1fr) auto; }
+    .gate-stage { position: relative; min-height: 0; display: flex; flex-direction: column; justify-content: center; padding: 16px 22px 16px 34px; overflow: hidden; }
+    .gate-stage::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 10px; background: var(--amber); transition: background-color .25s ease; }
+    .gate-stage[data-status="BLOCKED"]::before { background: var(--red); }
+    .gate-stage[data-status="CLEARED"], .gate-stage[data-status="CLEARED_LIMITED"] { background: linear-gradient(110deg, rgba(77,227,178,.08), transparent 65%); }
+    .gate-stage[data-status="BLOCKED"] { background: linear-gradient(110deg, rgba(255,90,95,.11), transparent 65%); }
+    .gate-kicker { margin-bottom: 4px; color: var(--muted); font: 700 10px/1 ui-monospace, monospace; letter-spacing: .18em; text-transform: uppercase; }
+    .gate-status { max-width: 100%; font-family: "Arial Narrow", "Roboto Condensed", sans-serif; font-size: clamp(45px, 5.2vw, 76px); font-weight: 950; letter-spacing: -.055em; line-height: .9; overflow-wrap: anywhere; color: var(--amber); transition: color .25s ease, transform .25s ease; }
+    .gate-stage[data-status="BLOCKED"] .gate-status { color: var(--red); }
+    .gate-stage[data-status="CLEARED"] .gate-status, .gate-stage[data-status="CLEARED_LIMITED"] .gate-status { color: var(--green); }
+    .gate-status.changed { transform: translateX(8px); }
+    .reason-list { min-height: 38px; margin: 14px 0 0; padding: 0; list-style: none; color: #ffd7d8; font-size: 12px; line-height: 1.45; }
+    .reason-list li::before { content: "×"; margin-right: 8px; color: var(--red); font-weight: 900; }
+    .reason-list .empty::before { content: "✓"; color: var(--green); }
+    .scope { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--rule); border-top: 1px solid var(--rule); }
+    .scope-cell { min-width: 0; padding: 10px 11px; background: var(--panel); }
+    .label { color: var(--muted); font: 700 9px/1 ui-monospace, monospace; letter-spacing: .12em; text-transform: uppercase; }
+    .scope-value { margin-top: 7px; overflow: hidden; color: var(--ink); font: 700 12px/1.2 ui-monospace, monospace; text-overflow: ellipsis; white-space: nowrap; }
+
+    .signal-panel { display: grid; grid-template-rows: 34px auto auto minmax(92px, 1fr); }
+    .signal { padding: 12px 14px; border-bottom: 1px solid var(--rule); }
+    .signal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 7px; }
+    .signal-name { font-family: "Arial Narrow", sans-serif; font-size: 17px; font-weight: 900; text-transform: uppercase; }
+    .signal-tag { padding: 3px 6px; border: 1px solid var(--rule); color: var(--muted); font: 700 9px/1 ui-monospace, monospace; text-transform: uppercase; }
+    .signal-value { overflow: hidden; color: var(--ink); font: 12px/1.35 ui-monospace, monospace; text-overflow: ellipsis; white-space: nowrap; }
+    .signal-link { display: block; margin-top: 5px; overflow: hidden; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+    .packet { display: flex; flex-direction: column; justify-content: center; padding: 12px 14px; }
+    .packet-state { margin-top: 8px; color: var(--red); font: 900 15px/1.2 "Arial Narrow", sans-serif; text-transform: uppercase; }
+    .packet-state.written { color: var(--green); }
+    .packet-path { margin-top: 5px; overflow-wrap: anywhere; color: var(--muted); font: 10px/1.35 ui-monospace, monospace; }
+
+    .journal-panel { display: grid; grid-template-rows: 34px minmax(0, 1fr) 94px; }
+    .journal { min-height: 0; display: grid; grid-template-rows: repeat(5, minmax(0, 1fr)); }
+    .event { min-height: 0; display: grid; grid-template-columns: 65px 1fr; gap: 8px; padding: 8px 10px; border-bottom: 1px solid var(--rule); overflow: hidden; }
+    .event-status { color: var(--cyan); font: 800 9px/1.25 ui-monospace, monospace; overflow-wrap: anywhere; }
+    .event-copy { min-width: 0; color: var(--muted); font: 10px/1.35 ui-monospace, monospace; overflow: hidden; }
+    .event-copy b { color: var(--ink); font-weight: 650; }
+    .command-log { min-height: 0; padding: 8px 10px; background: #080a0c; color: #b8c5d1; font: 10px/1.35 ui-monospace, monospace; white-space: pre-wrap; overflow: auto; }
+
+    .actions { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; padding: 10px; border-top: 1px solid var(--rule); background: #0d1013; }
+    .action { position: relative; border: 1px solid var(--rule); border-radius: 0; background: var(--raised); color: var(--ink); cursor: pointer; font-family: "Arial Narrow", sans-serif; font-size: 14px; font-weight: 850; letter-spacing: .01em; text-align: left; padding: 13px 12px 10px; transition: border-color .15s ease, background-color .15s ease, transform .15s ease; }
+    .action::before { content: attr(data-step); display: block; margin-bottom: 7px; color: var(--cyan); font: 700 9px/1 ui-monospace, monospace; letter-spacing: .12em; }
+    .action:hover { border-color: var(--cyan); background: #222a32; }
+    .action:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+    .action:active { transform: translateY(1px); }
+    .action[disabled] { cursor: wait; opacity: .48; }
+    .action.danger::before { color: var(--red); }
+    .action.payment::before { color: var(--amber); }
+
+    @media (max-width: 1050px) {
+      .board { min-width: 960px; }
+      .topbar { grid-template-columns: 190px 1fr auto; }
+      main { grid-template-columns: 1fr .76fr .9fr; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="board">
+    <header class="topbar">
+      <div class="brand">RIGHTS<span>RELAY</span></div>
+      <div class="entity"><span class="live-dot"></span><span id="entity-name">campaign-aurora:neon-drive</span> · <span id="entity-found">awaiting memory</span></div>
+      <div class="meta"><span><b>UTC</b> <span id="utc">—</span></span><span><b>GIT</b> <span id="git">—</span></span><span><b>PID</b> <span id="pid">—</span> · this pid is the launcher</span></div>
+    </header>
+
+    <main>
+      <section class="panel gate-panel">
+        <div class="panel-title"><span>Release gate</span><span id="db-path">DB —</span></div>
+        <div class="gate-stage" id="gate-stage" data-status="PENDING">
+          <div class="gate-kicker">Deterministic decision</div>
+          <div class="gate-status" id="gate-status">PENDING</div>
+          <ul class="reason-list" id="reasons"><li class="empty">No blocking reasons</li></ul>
+        </div>
+        <div class="scope">
+          <div class="scope-cell"><div class="label">Channels</div><div class="scope-value" id="channels">—</div></div>
+          <div class="scope-cell"><div class="label">Paid</div><div class="scope-value" id="paid">NO</div></div>
+          <div class="scope-cell"><div class="label">Territories</div><div class="scope-value" id="territories">—</div></div>
+          <div class="scope-cell"><div class="label">Expires</div><div class="scope-value" id="expires">—</div></div>
+        </div>
+      </section>
+
+      <section class="panel signal-panel">
+        <div class="panel-title"><span>Settlement signals</span><span>Base Sepolia</span></div>
+        <div class="signal">
+          <div class="signal-head"><span class="signal-name">Virtuals ACP</span><span class="signal-tag">review escrow</span></div>
+          <div class="signal-value">job <span id="acp-id">none</span></div>
+          <a class="signal-link" id="acp-link" target="_blank" rel="noreferrer">ACP contract on Base Sepolia</a>
+        </div>
+        <div class="signal">
+          <div class="signal-head"><span class="signal-name">x402</span><span class="signal-tag">rights purchase</span></div>
+          <div class="signal-value">tx <span id="x402-id">none</span></div>
+          <a class="signal-link" id="x402-link" target="_blank" rel="noreferrer" hidden>View transaction</a>
+        </div>
+        <div class="packet">
+          <div class="label">Release packet</div>
+          <div class="packet-state" id="packet-state">packet: none</div>
+          <div class="packet-path" id="packet-path">Gate must clear before export.</div>
+        </div>
+      </section>
+
+      <section class="panel journal-panel">
+        <div class="panel-title"><span>Sibyl COLD · last 5</span><span>evaluated → acted → forward</span></div>
+        <div class="journal" id="journal"></div>
+        <div class="command-log" id="command-log">READY · actions execute the existing CLI in a separate process.</div>
+      </section>
+    </main>
+
+    <nav class="actions" aria-label="Demo actions">
+      <button class="action" data-step="01 · WARM WRITE" data-action="init-aurora">Init Aurora</button>
+      <button class="action" data-step="02A · LOCAL" data-action="review-offline">Review (offline)</button>
+      <button class="action" data-step="02B · ACP" data-action="acp-review">ACP review</button>
+      <button class="action danger" data-step="03 · GATE" data-action="attempt">Attempt paid IG US+UK</button>
+      <button class="action payment" data-step="04 · HTTP 402" data-action="acquire-grant">Acquire grant (x402)</button>
+      <button class="action" data-step="05 · SAME INPUT" data-action="attempt-again">Attempt again</button>
+    </nav>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const escapeHtml = (value) => String(value ?? "").replace(/[&<>'"]/g, (character) => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"})[character]);
+    let lastStatus = null;
+    let serverUtc = null;
+    let receivedAt = 0;
+    let actionRunning = false;
+
+    function compact(value) {
+      if (!value) return "—";
+      if (typeof value === "string") return value;
+      return JSON.stringify(value).replaceAll('"', '');
+    }
+
+    function renderJournal(events) {
+      const rows = [...events];
+      while (rows.length < 5) rows.unshift(null);
+      $("journal").innerHTML = rows.map((event) => {
+        if (!event) return '<div class="event"><div class="event-status">—</div><div class="event-copy">No event</div></div>';
+        const acted = event.acted || {};
+        const evaluated = event.evaluated || {};
+        const forward = event.forward || {};
+        return `<div class="event">
+          <div class="event-status">${escapeHtml(event.status || "—")}</div>
+          <div class="event-copy"><b>${escapeHtml(acted.event || "event")}</b> · ${escapeHtml(acted.actor || "actor")}<br>evaluated ${escapeHtml(compact(evaluated.status))} → forward ${escapeHtml(compact(forward.authorization_status))}</div>
+        </div>`;
+      }).join("");
+    }
+
+    function render(data) {
+      serverUtc = Date.parse(data.utc);
+      receivedAt = Date.now();
+      $("git").textContent = data.git;
+      $("pid").textContent = data.pid;
+      $("db-path").textContent = `DB ${data.db_path}`;
+      $("entity-name").textContent = data.entity_name;
+      $("entity-found").textContent = data.entity_found ? "memory online" : "not initialized";
+      $("gate-stage").dataset.status = data.status;
+      if (lastStatus !== null && lastStatus !== data.status) {
+        $("gate-status").classList.add("changed");
+        window.setTimeout(() => $("gate-status").classList.remove("changed"), 260);
+      }
+      lastStatus = data.status;
+      $("gate-status").textContent = data.status;
+      $("reasons").innerHTML = data.reasons.length
+        ? data.reasons.map((reason) => `<li>${escapeHtml(reason)}</li>`).join("")
+        : '<li class="empty">No blocking reasons</li>';
+      $("channels").textContent = data.channels.length ? data.channels.join(" · ") : "—";
+      $("paid").textContent = data.paid ? "YES" : "NO";
+      $("territories").textContent = data.territories.length ? data.territories.join(" · ") : "—";
+      $("expires").textContent = data.expires_on || "—";
+      $("acp-id").textContent = data.acp_job_id || "none";
+      $("acp-link").href = data.acp_contract_explorer;
+      $("x402-id").textContent = data.x402_tx || "none";
+      $("x402-link").hidden = !data.x402_explorer;
+      $("x402-link").href = data.x402_explorer || "#";
+      $("packet-state").textContent = data.packet_written ? "packet: written" : "packet: none";
+      $("packet-state").classList.toggle("written", data.packet_written);
+      $("packet-path").textContent = data.packet_path || "Gate must clear before export.";
+      renderJournal(data.journal);
+    }
+
+    async function poll() {
+      if (actionRunning) return;
+      try {
+        const response = await fetch("/status", {cache: "no-store"});
+        if (!response.ok) throw new Error(`status ${response.status}`);
+        render(await response.json());
+      } catch (error) {
+        $("command-log").textContent = `STATUS ERROR · ${error.message}`;
+      }
+    }
+
+    async function runAction(button) {
+      actionRunning = true;
+      document.querySelectorAll(".action").forEach((item) => item.disabled = true);
+      $("command-log").textContent = `RUNNING · ${button.textContent.trim()}`;
+      try {
+        const response = await fetch(`/actions/${button.dataset.action}`, {method: "POST"});
+        const result = await response.json();
+        const output = [result.stdout, result.stderr].filter(Boolean).join("\n").trim();
+        $("command-log").textContent = `EXIT ${result.returncode} · ${result.duration_ms}ms\n${output || "No output"}`;
+      } catch (error) {
+        $("command-log").textContent = `ACTION ERROR · ${error.message}`;
+      } finally {
+        actionRunning = false;
+        document.querySelectorAll(".action").forEach((item) => item.disabled = false);
+        await poll();
+      }
+    }
+
+    document.querySelectorAll(".action").forEach((button) => button.addEventListener("click", () => runAction(button)));
+    window.setInterval(() => {
+      if (serverUtc !== null) $("utc").textContent = new Date(serverUtc + Date.now() - receivedAt).toISOString().replace(".000Z", "Z");
+    }, 250);
+    window.setInterval(poll, 1000);
+    poll();
+  </script>
+</body>
+</html>

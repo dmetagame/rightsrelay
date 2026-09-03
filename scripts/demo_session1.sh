@@ -4,11 +4,6 @@ set -eu
 
 PYTHON_BIN="${PYTHON_BIN:-.venv/bin/python}"
 
-"$PYTHON_BIN" -m rightsrelay status
-"$PYTHON_BIN" -m rightsrelay init-aurora
-"$PYTHON_BIN" -m rightsrelay acp-review
-"$PYTHON_BIN" -m rightsrelay status
-
-echo "Session 1 shell PID: $$"
-echo "Operator: record this PID, then kill this shell before starting Session 2."
-read -r -p "Waiting for process kill (press Enter only outside the recorded take): " _
+echo "Session 1 console: use Init Aurora, then ACP review."
+echo "Open http://127.0.0.1:8080 and kill the launcher PID shown on the board."
+exec "$PYTHON_BIN" -m rightsrelay serve

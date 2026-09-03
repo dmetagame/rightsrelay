@@ -23,3 +23,6 @@ dev = ["pytest>=9,<10"]
 [tool.pytest.ini_options]
 addopts = "-ra"
 testpaths = ["tests"]
+
+[tool.setuptools.package-data]
+rightsrelay = ["console.html"]

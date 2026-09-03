@@ -1,59 +1,63 @@
-# RightsRelay unedited demo shot list
+# RightsRelay — 4:00 unedited take
 
-This take demonstrates a real Virtuals ACP review coordinated through Sibyl,
-durable recall after process death, a hard release refusal, and a later Base
-Sepolia x402 rights purchase. Record it only after both live integrations pass.
+Use one absolute `RIGHTSRELAY_DB` path in every process. Start the x402 seller
+before recording. If the five ACP variables are configured, also start the ACP
+provider. Keep a terminal beside the board so the real process kill is visible.
 
-## Before recording
+## Shot list
 
-1. Start from the repository root with the virtual environment installed.
-2. Register and fund the Virtuals sandbox buyer and provider, configure the
-   `Rights review` offering, and set all five ACP variables from `.env.example`.
-3. Start `./scripts/run_acp_provider.sh` in a visible terminal. Show its PID,
-   `BASE_SEPOLIA_CONFIG_V2`, provider wallet, and shared database path.
-4. Fund the x402 buyer address with Base Sepolia test ETH and USDC. Set
-   `RIGHTSRELAY_BUYER_KEY` and set `RIGHTSRELAY_PAY_TO` to the seller address.
-5. Start `./scripts/run_seller.sh` in a visible terminal. Leave its Base
-   Sepolia network, x402.org facilitator, `$0.001` price, and rights-holder
-   disclosure on screen.
-6. Set `RIGHTSRELAY_DB` to one absolute SQLite path used by every process.
-7. Use a new database and confirm that the release-packet destination does not
-   exist. Do not delete an unfamiliar database or packet during the take.
-8. Keep the wall clock and terminal visible for the entire unedited recording.
+**0:00–0:20 — provenance and empty state**
 
-## Session 1 — producer and ACP reviewer
+- Run `./scripts/demo_session1.sh` for live ACP, or
+  `./scripts/demo_session1_offline.sh` when ACP registration is unavailable.
+- Open `http://127.0.0.1:8080`. Hold the updating UTC clock, commit hash,
+  launcher PID, database path, entity name, `PENDING`, and `packet: none`.
 
-1. Run `./scripts/demo_session1.sh`.
-2. The first `status` shows the process ID, UTC time, commit, database path, and
-   empty authorization state.
-3. `init-aurora` writes the PENDING authorization.
-4. `acp-review` prints the structured entity/requested-use JSON and the real
-   on-chain job ID.
-5. Keep request → negotiation → escrow → provider delivery → self-evaluation
-   visible. The provider terminal must show it handled the job without chat.
-6. `acp-review` completes only after it checks that the WARM entity is now
-   YouTube, organic, UK, `CLEARED_LIMITED`, with the same `acp_job_id`.
-7. The final `status` shows the entity and its COLD `reviewer.acp` event.
-8. Record the printed shell PID and kill that shell on screen.
+**0:20–1:10 — write and review**
 
-## Session 2 — fresh launcher process
+- Click **Init Aurora**.
+- With live ACP, click **ACP review** and keep the real job/escrow output visible.
+- Without the five ACP variables, click **Review (offline)** and say exactly:
+  “Reviewer is local this take; ACP job is the same write path, live job at
+  workshop.” Never imply that the local review created an ACP job.
 
-1. Open a new shell with the same `RIGHTSRELAY_DB` value.
-2. Run `./scripts/demo_session2.sh`.
-3. `status` must recall the `CLEARED_LIMITED` entity from Session 1 without any
-   chat transcript.
-4. The paid Instagram request for US and UK prints `BLOCKED`, lists its reasons,
-   exits 1 internally, and creates no release packet.
-5. `acquire-grant` visibly shows the initial HTTP 402 and `PAYMENT-REQUIRED`,
-   pays `$0.001` test USDC, retries, and shows the real `PAYMENT-RESPONSE`.
-6. Show the facilitator settlement identifier. Show the Base Sepolia explorer
-   URL only when the facilitator returned a transaction hash.
-7. The identical paid Instagram request now prints `CLEARED` and writes the
-   release packet.
-8. End on `status`: show the same WARM entity with the paid Instagram/US+UK
-   grant, `x402_tx`, and the COLD payment metadata.
+**1:10–1:20 — limited authorization**
 
-If live ACP is unavailable, film `demo_session1_offline.sh` only as the Sibyl
-memory proof and omit the Virtuals claim. Do not claim mainnet or third-party
-rights/platform integrations. The track is original, and `rightsrelay-demo` is
-the rights holder operating the later 402 server.
+- Hold `CLEARED_LIMITED`, YouTube, paid no, UK, September 30, the journal row,
+  and the real `acp_job_id` or `none`.
+
+**1:20–1:30 — real process death**
+
+- In the visible terminal run `kill <LAUNCHER_PID>` using the PID on the board.
+- Show that the console process stops. This is not a UI reset.
+
+**1:30–1:50 — fresh launcher recall**
+
+- Run `./scripts/demo_session2.sh` and reopen the board.
+- Hold the different launcher PID and the same recalled `CLEARED_LIMITED`
+  entity. There is no chat transcript.
+
+**1:50–2:20 — hard block**
+
+- Click **Attempt paid IG US+UK**.
+- Hold the red `BLOCKED` state, channel/paid/US reasons, and `packet: none`.
+
+**2:20–3:10 — scoped x402 purchase**
+
+- Click **Acquire grant (x402)**.
+- Keep the command output visible through HTTP 402, payment, paid retry, and
+  HTTP 200. Show the actual settlement identifier. A BaseScan transaction link
+  appears only if the facilitator returned a real transaction hash.
+- Hold the updated paid/Instagram/US+UK authorization.
+
+**3:10–3:30 — identical request clears**
+
+- Click **Attempt again**. This is the same paid Instagram US+UK attempt.
+- Hold the green `CLEARED` state and the written release-packet path.
+
+**3:30–4:00 — proof frame**
+
+- End on the authorization scope, final journal rows, real `acp_job_id` or
+  `none`, actual `x402_tx` or settlement identifier, and packet path.
+- Say: “RightsRelay is release operations, not legal advice. We own Neon Drive,
+  operate its demo rights-holder endpoint, and this payment is Base Sepolia.”

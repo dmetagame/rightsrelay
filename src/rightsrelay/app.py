@@ -320,6 +320,26 @@ def _acp_review(_: argparse.Namespace, database: Path) -> int:
     return 0
 
 
+def _serve(arguments: argparse.Namespace, database: Path) -> int:
+    import uvicorn
+
+    from rightsrelay.console import create_console_app
+
+    console = create_console_app(
+        database=database,
+        working_directory=Path.cwd(),
+    )
+    print(f"CONSOLE: http://{arguments.host}:{arguments.port}")
+    print(f"LAUNCHER PID: {os.getpid()} (this pid is the launcher)")
+    uvicorn.run(
+        console,
+        host=arguments.host,
+        port=arguments.port,
+        log_level="warning",
+    )
+    return 0
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="rightsrelay")
     commands = parser.add_subparsers(dest="command", required=True)
@@ -347,6 +367,11 @@ def _parser() -> argparse.ArgumentParser:
     apply_grant.add_argument("--territories", required=True)
     apply_grant.add_argument("--expires", required=True)
     apply_grant.set_defaults(handler=_apply_grant)
+
+    serve = commands.add_parser("serve")
+    serve.add_argument("--host", default="127.0.0.1")
+    serve.add_argument("--port", type=int, default=8080)
+    serve.set_defaults(handler=_serve)
     return parser
 
 
