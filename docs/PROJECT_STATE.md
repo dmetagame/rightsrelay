@@ -3,17 +3,16 @@
 > Living handoff for Codex sessions. Read this file before working. Do not put
 > secrets or raw credential-bearing values here.
 
-Last updated: `2026-09-03T08:25:51+01:00`
-Status: `IMPLEMENTED_PENDING_FUNDED_INTEGRATION`
-Active objective: Replace the explicit x402 stub with an official-package Base Sepolia seller/buyer flow, reuse the existing same-entity grant mutation, and preserve the frozen core.
+Last updated: `2026-09-03T10:36:38+01:00`
+Status: `IN_PROGRESS_VIRTUALS_ACP`
+Active objective: Add the real Virtuals ACP reviewer coordination path while preserving the frozen gate, models, MemoryClient call shapes, and completed x402 path.
 
 ## Workspace
 
 - Repository: local Git repository; no remote configured yet
 - Worktree: `/home/rouma/rightsrelay`
 - Branch: `main`
-- Implementation checkpoint: `7444ce1` (`feat: complete Base Sepolia x402
-  grant flow`); the state-only handoff commit sits directly above it
+- Current commit: `4552eaf` (`docs: record x402 checkpoint`)
 - Protected releases/artifacts: `src/rightsrelay/gate.py`, `src/rightsrelay/models.py`, and existing MemoryClient call shapes are frozen unless an existing test turns red; partner integrations and UI are out of scope
 
 ## Constraints
@@ -27,14 +26,29 @@ Active objective: Replace the explicit x402 stub with an official-package Base S
 
 ## Current Context
 
-- This turn is x402-only: official Python package inspection, Base Sepolia seller/buyer, CLI wiring, demo Session 2 update, x402 tests, environment template, and README documentation.
-- GitHub CLI authentication currently reports invalid and no remote exists. Pushing or creating a remote is explicitly forbidden this turn.
+- This turn is Virtuals ACP only: inspect the official SDK, prove the provider's
+  same-entity mutation offline, wire a fail-closed client/provider lifecycle,
+  update Session 1, and preserve Session 2 unchanged.
+- GitHub CLI authentication currently reports invalid and no remote exists, so
+  a verified remote backup is unavailable.
 - `sibyl-memory-client` was not installed globally when work started.
 - The official Sibyl repository documents local-first, unactivated SDK operation and WARM uniqueness by `(tenant_id, category, name)`.
 - User-confirmed test seams are `can_release`, fail-closed export, and cross-process Sibyl persistence.
 
 ## Work Completed
 
+- Inspected `virtuals-acp==0.3.23` in a supported Python 3.11 environment.
+  Confirmed the current callback is `(job, memo_to_sign)` and lifecycle methods
+  live on `ACPJob`; the older README-level `respond_job`, `pay_job`, and
+  `deliver_job` methods are absent.
+- Confirmed the SDK includes `BASE_SEPOLIA_CONFIG_V2` and
+  `BASE_SEPOLIA_ACP_X402_CONFIG_V2`; ACP work will use Base Sepolia rather than
+  the package's mainnet default.
+- Added the offline provider mutation seam. `apply_limited_grant` directly reads
+  and rewrites the one real Sibyl WARM entity, records `reviewer.acp` and the ACP
+  job ID in COLD history, and returns the structured deliverable.
+- Added a fresh-process test proving the provider mutation survives process
+  exit and is recalled through the real `MemoryClient` API.
 - Installed and inspected official `x402==2.21.0`. The FastAPI extra alone does not load the EVM scheme; the package explicitly requires its `evm` extra as well.
 - Confirmed the official buyer stack from installed source and upstream examples: `x402Client`, `register_exact_evm_client`, `EthAccountSigner`, and `x402HTTPClient`/httpx transport helpers. Settlement is decoded from the real `PAYMENT-RESPONSE` header.
 - Added the Base Sepolia rights-holder seller factory with fixed testnet network `eip155:84532`, facilitator `https://x402.org/facilitator`, price `$0.001`, and env-provided pay-to address. Mainnet remains gated off behind explicit environment configuration.
@@ -99,6 +113,7 @@ Active objective: Replace the explicit x402 stub with an official-package Base S
 | Demo scripts after x402 | passed | `bash -n scripts/demo_session1.sh scripts/demo_session2.sh scripts/run_seller.sh`, 2026-09-03 |
 | Python compilation after x402 | passed | `.venv/bin/python -m compileall -q src tests scripts`; generated project bytecode removed, 2026-09-03 |
 | x402 diff hygiene | passed | `git diff --check`, 2026-09-03 |
+| ACP provider memory seam | passed | `.venv/bin/pytest tests/test_acp_provider_memory.py -q` → `1 passed`; real Sibyl write/journal and fresh-process recall, 2026-09-03 |
 
 ## Risks And Blockers
 
@@ -141,3 +156,5 @@ Active objective: Replace the explicit x402 stub with an official-package Base S
 | 2026-09-03T08:15:00+01:00 | Codex | Completed x402 seller 402 tracer | Official middleware emitted HTTP 402 and `PAYMENT-REQUIRED` through live testnet facilitator; no payment attempted |
 | 2026-09-03T08:24:35+01:00 | Codex | Completed x402 runtime and demo wiring | 18 tests passed; funded Base Sepolia integration skipped because wallet/pay-to variables are absent; frozen core untouched |
 | 2026-09-03T08:25:51+01:00 | Codex | Created local x402 implementation checkpoint | Commit `7444ce1`; no push attempted because no remote exists and this turn forbids creating one |
+| 2026-09-03T08:30:00+01:00 | Codex | Reconciled handoff and began Virtuals ACP checkpoint | Clean `main` at `4552eaf`; frozen core and completed x402 path protected; GitHub auth remains invalid and no remote exists |
+| 2026-09-03T10:36:38+01:00 | Codex | Completed offline ACP provider tracer | Real shared-entity mutation and fresh-process recall passed; current SDK lifecycle drift documented |
