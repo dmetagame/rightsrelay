@@ -3,7 +3,7 @@
 > Living handoff for Codex sessions. Read this file before working. Do not put
 > secrets or raw credential-bearing values here.
 
-Last updated: `2026-09-03T22:33:56+01:00`
+Last updated: `2026-09-03T22:36:31+01:00`
 Status: `LOCAL_X402_WALLETS_READY_UNFUNDED`
 Active objective: Completed—fresh Base Sepolia x402 seller and buyer EOAs are stored only in ignored local `.env`; the human must fund them before any live settlement attempt.
 
@@ -14,6 +14,7 @@ Active objective: Completed—fresh Base Sepolia x402 seller and buyer EOAs are 
 - Branch: `main`
 - Upstream: `origin/main`
 - Implementation checkpoint: `03cf2b1` (`feat: add filmable release demo console`)
+- Local wallet-setup metadata checkpoint: `2d3c697` (`chore: add buyer address env placeholder`), verified on `origin/main`
 - Protected releases/artifacts: `src/rightsrelay/gate.py`, `src/rightsrelay/models.py`, existing MemoryClient call shapes, and both x402/ACP adapters are frozen unless an existing test turns red
 
 ## Constraints
@@ -249,3 +250,4 @@ Active objective: Completed—fresh Base Sepolia x402 seller and buyer EOAs are 
 | 2026-09-03T21:02:45+01:00 | Codex | Published and verified public repository | `main` pushed with upstream tracking; GitHub reports `visibility=public`, `isPrivate=false`, default branch `main`; remote SHA matched local `4a6a0e1` before this final handoff commit |
 | 2026-09-03T22:32:39+01:00 | Codex | Began local Base Sepolia wallet setup | Clean tracking branch at `f0ec0c0`; `.env` absent and ignored; `eth_account` available; no key material written to tracked files |
 | 2026-09-03T22:33:56+01:00 | Codex | Completed unfunded local x402 wallet setup | Fresh seller/buyer EOAs stored only in ignored mode-`0600` `.env`; 22 passed, two funded integration skips; tracked secret scan clean |
+| 2026-09-03T22:36:31+01:00 | Codex | Published non-secret wallet setup metadata | Commit `2d3c697` reached `origin/main`; local and remote SHAs matched; `.env` remained ignored and untracked |
