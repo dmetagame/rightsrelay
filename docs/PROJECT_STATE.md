@@ -3,8 +3,8 @@
 > Living handoff for Codex sessions. Read this file before working. Do not put
 > secrets or raw credential-bearing values here.
 
-Last updated: `2026-09-03T10:36:38+01:00`
-Status: `IN_PROGRESS_VIRTUALS_ACP`
+Last updated: `2026-09-03T11:16:04+01:00`
+Status: `IMPLEMENTED_PENDING_ACP_REGISTRATION`
 Active objective: Add the real Virtuals ACP reviewer coordination path while preserving the frozen gate, models, MemoryClient call shapes, and completed x402 path.
 
 ## Workspace
@@ -49,6 +49,20 @@ Active objective: Add the real Virtuals ACP reviewer coordination path while pre
   job ID in COLD history, and returns the structured deliverable.
 - Added a fresh-process test proving the provider mutation survives process
   exit and is recalled through the real `MemoryClient` API.
+- Added the real ACP provider callback using the installed `(job,
+  memo_to_sign)` shape. It validates the structured entity request, accepts and
+  creates the ACP requirement, waits for the transaction phase, rewrites Sibyl,
+  and calls `ACPJob.deliver` with matching JSON.
+- Added the producer-side ACP client. It discovers the registered `Rights
+  review` offering, initiates structured JSON, submits the registered fare with
+  `pay_and_accept_requirement`, verifies Sibyl against the deliverable before
+  self-evaluation, and polls to completion.
+- Added fail-closed `acp-review`, separate live/offline Session 1 scripts, a
+  provider launcher, registration documentation, and an integration test that
+  cannot create a fake job ID.
+- Rebuilt the disposable project environment on Python 3.11.15 because every
+  published `virtuals-acp` release rejects Python 3.13. Project metadata now
+  records the SDK-compatible `<3.13` upper bound.
 - Installed and inspected official `x402==2.21.0`. The FastAPI extra alone does not load the EVM scheme; the package explicitly requires its `evm` extra as well.
 - Confirmed the official buyer stack from installed source and upstream examples: `x402Client`, `register_exact_evm_client`, `EthAccountSigner`, and `x402HTTPClient`/httpx transport helpers. Settlement is decoded from the real `PAYMENT-RESPONSE` header.
 - Added the Base Sepolia rights-holder seller factory with fixed testnet network `eip155:84532`, facilitator `https://x402.org/facilitator`, price `$0.001`, and env-provided pay-to address. Mainnet remains gated off behind explicit environment configuration.
@@ -114,32 +128,45 @@ Active objective: Add the real Virtuals ACP reviewer coordination path while pre
 | Python compilation after x402 | passed | `.venv/bin/python -m compileall -q src tests scripts`; generated project bytecode removed, 2026-09-03 |
 | x402 diff hygiene | passed | `git diff --check`, 2026-09-03 |
 | ACP provider memory seam | passed | `.venv/bin/pytest tests/test_acp_provider_memory.py -q` → `1 passed`; real Sibyl write/journal and fresh-process recall, 2026-09-03 |
+| ACP fail-closed CLI | passed | Missing all five registration variables prints their exact names and exits 2 without falling back to `review-limited`, 2026-09-03 |
+| Full suite after ACP | passed | `.venv/bin/pytest -q` → `20 passed, 2 skipped in 10.53s`; skips are the two funded live integrations, 2026-09-03 |
+| Frozen paths after ACP | passed | No diff in gate, models, MemoryClient wrapper, x402 buyer/seller, or Session 2, 2026-09-03 |
+| Dependency compatibility | passed | `uv pip check --python .venv/bin/python` → all 94 installed packages compatible on Python 3.11.15, 2026-09-03 |
+| ACP/demo scripts | passed | `bash -n` on live/offline Session 1, unchanged Session 2, and both provider/seller launchers, 2026-09-03 |
 
 ## Risks And Blockers
 
 - No Git remote is configured, so checkpoints can be committed locally but not pushed.
 - GitHub CLI authentication reports invalid; no authentication change was attempted because this turn forbids pushing and remote creation.
 - README file:line references are exact for this checkpoint and must be updated if `memory.py`, `gate.py`, or `export.py` shifts.
-- Virtuals ACP remains deliberately unwired and unclaimed.
+- Virtuals ACP code is wired but remains unclaimed as live: all five required
+  registration variables are absent, so no job was initiated and no job ID
+  exists. The real integration test is skipped rather than mocked.
+- `virtuals-acp==0.3.23` emits an upstream `websockets.legacy` deprecation
+  warning under the current dependency set; tests still pass.
 - The x402 runtime is wired, but a real Base Sepolia settlement cannot yet be
   claimed: neither `RIGHTSRELAY_BUYER_KEY` nor `RIGHTSRELAY_PAY_TO` is present.
   No payment was attempted and no transaction exists from this checkpoint.
 
 ## Next Actions
 
-1. Fund a dedicated buyer with Base Sepolia test ETH and USDC; configure a
-   seller pay-to address without recording either private key.
-2. Run `tests/test_x402_grant.py::test_real_base_sepolia_buyer_round_trip` and
-   record the real facilitator settlement/transaction.
-3. Rehearse `scripts/demo_session2.sh` from a clean packet destination, then
-   film the unedited red-to-green take. Do not claim Base until this succeeds.
+1. In the Virtuals sandbox, register distinct buyer and RightsRelay provider
+   agents, create smart wallets, whitelist the development wallet, and register
+   the `Rights review` offering with the documented JSON schema.
+2. Fund the buyer with the offering's test-USDC fare; configure the five ACP
+   variables without recording their values; start `run_acp_provider.sh`.
+3. Run `tests/test_acp_job.py` and retain the real job ID/escrow evidence. At
+   the Sep 5–7 workshop, confirm the Python Base Sepolia V2/self-evaluation flow
+   counts before claiming Virtuals.
+4. Separately complete the funded x402 integration and rehearse both sessions.
 
 ## Session Handoff
 
 - Start with this file and `git status --short --branch`.
 - Verification command: `.venv/bin/pytest -q`.
 - Treat `src/rightsrelay/gate.py`, `src/rightsrelay/models.py`, and the existing MemoryClient call shapes as frozen unless a test turns red.
-- Do not begin UI or ACP work without a new authorized continuation.
+- Do not begin UI, LLM, or additional partner work without a new authorized
+  continuation; do not claim either partner until its funded integration passes.
 
 ## Change Log
 
@@ -158,3 +185,4 @@ Active objective: Add the real Virtuals ACP reviewer coordination path while pre
 | 2026-09-03T08:25:51+01:00 | Codex | Created local x402 implementation checkpoint | Commit `7444ce1`; no push attempted because no remote exists and this turn forbids creating one |
 | 2026-09-03T08:30:00+01:00 | Codex | Reconciled handoff and began Virtuals ACP checkpoint | Clean `main` at `4552eaf`; frozen core and completed x402 path protected; GitHub auth remains invalid and no remote exists |
 | 2026-09-03T10:36:38+01:00 | Codex | Completed offline ACP provider tracer | Real shared-entity mutation and fresh-process recall passed; current SDK lifecycle drift documented |
+| 2026-09-03T11:14:46+01:00 | Codex | Completed ACP code and fail-closed demo wiring | 20 tests passed; two funded integrations skipped; no credentials or real ACP job ID available |

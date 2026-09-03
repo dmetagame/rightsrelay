@@ -13,13 +13,15 @@ RightsRelay is release-operations software, not legal advice.
 ## Current checkpoint
 
 The deterministic gate, Sibyl persistence wrapper, COLD journal adapter,
-fail-closed export, cross-process CLI, and official-package x402 seller/buyer
-are implemented. The UI, LLM, and Virtuals ACP are out of scope.
+fail-closed export, cross-process CLI, official-package x402 seller/buyer, and
+Virtuals ACP reviewer processes are implemented. The UI and LLM are out of
+scope. The ACP runtime is not claimed as live until a registered, funded
+sandbox job completes.
 
 ## Run the core
 
 ```bash
-python3 -m venv .venv
+python3.11 -m venv .venv
 .venv/bin/pip install -e '.[dev]'
 .venv/bin/pytest -q
 ```
@@ -41,10 +43,22 @@ filmable Session 1 commands are:
 export RIGHTSRELAY_DB="$(pwd)/data/rightsrelay.sqlite"
 .venv/bin/python -m rightsrelay status
 .venv/bin/python -m rightsrelay init-aurora
-.venv/bin/python -m rightsrelay review-limited
+.venv/bin/python -m rightsrelay acp-review
 .venv/bin/python -m rightsrelay status
 echo "Session 1 shell PID: $$"
 ```
+
+The separate provider must already be running in another terminal with the
+same database path:
+
+```bash
+./scripts/run_acp_provider.sh
+```
+
+If ACP registration is unavailable, use `./scripts/demo_session1_offline.sh`.
+That explicit fallback runs `review-limited` as `reviewer.local`; it does not
+claim an ACP job, escrow, or multiplier. The live `demo_session1.sh` never
+falls through to the local reviewer.
 
 Record that PID, then kill it from another terminal so the handoff is a real
 process restart:
@@ -122,6 +136,55 @@ Mainnet is off by default. Enabling it requires both
 `RIGHTSRELAY_MAINNET_FACILITATOR`; the test-only x402.org facilitator is never
 used for mainnet. This checkpoint has not been tested or claimed on mainnet.
 
+## Virtuals ACP reviewer setup
+
+RightsRelay uses `virtuals-acp==0.3.23` with the installed
+`BASE_SEPOLIA_CONFIG_V2`. The package supports Python 3.10–3.12, so this project
+requires Python 3.11 or 3.12. It does not silently use the package's mainnet
+default.
+
+The roles are intentionally narrow:
+
+- **Client:** the producer-side `acp-review` command creates the structured job,
+  pays the registered job fare into ACP escrow, polls it, and checks that the
+  shared authorization—not merely the deliverable—changed.
+- **Provider:** the separate RightsRelay rights-review process reads the one
+  Sibyl entity, applies fixed limited rights, writes the same entity and COLD
+  event, then delivers matching JSON. It never receives chat history.
+- **Evaluator:** the client evaluates its own provider result after comparing
+  the ACP deliverable with the shared entity. This is disclosed self-evaluation,
+  not an independent legal review.
+
+Self-evaluation on Virtuals ACP; provider is our rights-review agent; job escrow
+is ACP, which is separate from the later x402 rights-purchase.
+
+Use the [Virtuals ACP/EconomyOS documentation](https://os.virtuals.io/acp/) and
+the [official Python SDK repository](https://github.com/Virtual-Protocol/acp-python)
+to prepare the sandbox:
+
+1. Register two real sandbox agents: a buyer/client and the RightsRelay
+   provider. Create their smart wallets and whitelist the development wallet.
+2. Register a provider offering named `Rights review` with a small test-USDC
+   fixed price and a requirement schema containing `entity_name` and
+   `requested_use` JSON objects.
+3. Fund the sandbox buyer with enough test USDC for that registered offering.
+4. Set `WHITELISTED_WALLET_PRIVATE_KEY`, `BUYER_AGENT_WALLET_ADDRESS`,
+   `BUYER_ENTITY_ID`, `SELLER_AGENT_WALLET_ADDRESS`, and `SELLER_ENTITY_ID` in
+   `.env`. Never commit the private key.
+5. Load `.env`, start `./scripts/run_acp_provider.sh`, then run
+   `./scripts/demo_session1.sh` in a separate terminal.
+
+`acp-review` exits 2 and lists missing variables when this setup is incomplete;
+it never substitutes `review-limited`. SDK version 0.3.23 returns an on-chain
+job ID but does not expose a per-job URL or the initiation transaction hash on
+this interface, so the CLI prints the actual job ID and the SDK configuration's
+Base Sepolia contract explorer URL rather than fabricating a link.
+
+At the Sep 5–7 partner workshop, confirm that this Python SDK sandbox contract,
+self-evaluation flow, and on-screen escrow count for the partner multiplier.
+Do not claim Virtuals on the submission form until the partner confirms it and
+the live integration test records a real job ID.
+
 ## Where memory is load-bearing
 
 `build_release_packet` accepts a memory database path, never an authorization
@@ -142,6 +205,10 @@ Critical paths at this checkpoint:
 - Paid grant handler: `src/rightsrelay/x402_seller.py:147` — grant JSON
 - Apply after payment: `src/rightsrelay/app.py:259` — calls the shared
   `apply_grant` mutation path only after the buyer returns a settled grant
+- ACP provider read: `src/rightsrelay/acp_provider.py:33` — `get_entity`
+- ACP provider write: `src/rightsrelay/acp_provider.py:51` — `set_entity`
+- ACP client memory assertion: `src/rightsrelay/acp_client.py:71` — evaluation
+  fails unless the same entity contains that ACP job ID
 
 Tenant, entity kind, and entity name are fixed in `src/rightsrelay/memory.py`:
 `rightsrelay`, `UseAuthorization`, and `campaign-aurora:neon-drive`.
@@ -159,7 +226,10 @@ status, and reasons plus `acp_job_id` and `x402_tx` when present.
   Base Sepolia round-trip is an integration test that skips unless
   `RIGHTSRELAY_BUYER_KEY` and `RIGHTSRELAY_PAY_TO` are present; do not claim the
   hackathon multiplier until a real settlement is recorded on screen.
-- **Virtuals ACP:** not implemented or claimed.
+- **Virtuals ACP:** implemented against the official Python SDK's Base Sepolia
+  V2 config. The offline provider/memory proof is automated. The live job test
+  skips without registered buyer/provider credentials, and no job ID is
+  claimed at this checkpoint.
 
 The runtime path never fabricates a successful payment response or transaction
 hash. When the facilitator does not return a transaction hash, RightsRelay
@@ -167,11 +237,15 @@ stores and prints the actual settlement payload instead of inventing one.
 
 ## How memory made this possible
 
-The limited grant survives the producer process and becomes the only input the
-fresh launcher may use for release policy. Updating the same WARM entity changes
-the later result from `BLOCKED` to `CLEARED`; deleting Sibyl makes export
-impossible rather than falling back to a PDF, prompt, or caller-supplied grant.
-HOT state stores only the current release attempt. Conversations are not stored.
+The ACP provider and producer-side client coordinate through the same
+authorization rather than exchanging transcripts. The provider's structured
+deliverable is insufficient on its own: `acp-review` fails unless the WARM
+entity itself becomes `CLEARED_LIMITED` with that real job ID. The limited grant
+then survives the producer process and becomes the only input the fresh launcher
+may use for release policy. The later x402 purchase rewrites that same entity,
+changing the identical request from `BLOCKED` to `CLEARED`. Deleting Sibyl makes
+export impossible. HOT stores only the current attempt; conversations are not
+stored.
 
 ## Prior Work
 

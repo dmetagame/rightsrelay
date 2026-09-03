@@ -7,12 +7,13 @@ name = "rightsrelay"
 version = "0.1.0"
 description = "Deterministic, memory-backed release control for commercial music assets"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.13"
 license = "MIT"
 authors = [{ name = "RightsRelay contributors" }]
 dependencies = [
   "pydantic>=2.13,<3",
   "sibyl-memory-client>=0.8,<0.9",
+  "virtuals-acp>=0.3.23,<0.4",
   "x402[evm,fastapi,httpx]>=2.21,<3",
 ]
 

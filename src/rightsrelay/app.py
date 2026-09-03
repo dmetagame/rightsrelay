@@ -299,6 +299,27 @@ def _acquire_grant(_: argparse.Namespace, database: Path) -> int:
     return 0
 
 
+def _acp_review(_: argparse.Namespace, database: Path) -> int:
+    from rightsrelay.acp_client import ACPReviewError, missing_acp_env, run_acp_review
+
+    missing = missing_acp_env()
+    if missing:
+        print(f"ACP CONFIG MISSING: {', '.join(missing)}")
+        return 2
+    try:
+        result = run_acp_review(memory_path=database)
+    except ACPReviewError as exc:
+        print(f"ACP REVIEW FAILED: {exc}")
+        return 2
+    except Exception as exc:
+        print(f"ACP REVIEW FAILED: Virtuals ACP SDK error ({type(exc).__name__})")
+        return 2
+    print(f"ACP REVIEW COMPLETED: {result.phase}")
+    print(f"ACP JOB ID: {result.job_id}")
+    print(f"ACP CONTRACT: {result.contract_explorer_url}")
+    return 0
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="rightsrelay")
     commands = parser.add_subparsers(dest="command", required=True)
@@ -318,6 +339,7 @@ def _parser() -> argparse.ArgumentParser:
     attempt.set_defaults(handler=_attempt)
 
     commands.add_parser("acquire-grant").set_defaults(handler=_acquire_grant)
+    commands.add_parser("acp-review").set_defaults(handler=_acp_review)
 
     apply_grant = commands.add_parser("apply-grant")
     apply_grant.add_argument("--paid", action="store_true")

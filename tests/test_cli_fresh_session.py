@@ -7,6 +7,15 @@ import sys
 from pathlib import Path
 
 
+ACP_ENV_VARS = (
+    "WHITELISTED_WALLET_PRIVATE_KEY",
+    "BUYER_AGENT_WALLET_ADDRESS",
+    "BUYER_ENTITY_ID",
+    "SELLER_AGENT_WALLET_ADDRESS",
+    "SELLER_ENTITY_ID",
+)
+
+
 def _run_cli(
     workdir: Path,
     database: Path,
@@ -16,6 +25,8 @@ def _run_cli(
     environment["RIGHTSRELAY_DB"] = str(database)
     environment.pop("RIGHTSRELAY_BUYER_KEY", None)
     environment.pop("RIGHTSRELAY_X402_MAINNET", None)
+    for name in ACP_ENV_VARS:
+        environment.pop(name, None)
     return subprocess.run(
         [sys.executable, "-m", "rightsrelay", *arguments],
         cwd=workdir,
@@ -134,3 +145,18 @@ def test_acquire_grant_without_a_buyer_key_fails_clearly(tmp_path) -> None:
         "RuntimeError: RIGHTSRELAY_BUYER_KEY is required to pay for the grant"
         in result.stderr
     )
+
+
+def test_acp_review_without_registration_exits_two_with_exact_missing_vars(
+    tmp_path,
+) -> None:
+    database = tmp_path / "data" / "rightsrelay.sqlite"
+
+    result = _run_cli(tmp_path, database, "acp-review")
+
+    assert result.returncode == 2
+    assert result.stderr == ""
+    assert result.stdout.splitlines() == [
+        f"DB: {database}",
+        "ACP CONFIG MISSING: " + ", ".join(ACP_ENV_VARS),
+    ]
