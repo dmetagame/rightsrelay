@@ -3,9 +3,9 @@
 > Living handoff for Codex sessions. Read this file before working. Do not put
 > secrets or raw credential-bearing values here.
 
-Last updated: `2026-09-03T22:36:31+01:00`
-Status: `LOCAL_X402_WALLETS_READY_UNFUNDED`
-Active objective: Completed—fresh Base Sepolia x402 seller and buyer EOAs are stored only in ignored local `.env`; the human must fund them before any live settlement attempt.
+Last updated: `2026-09-04T00:07:32+01:00`
+Status: `FUNDED_X402_VERIFIED`
+Active objective: Completed—funding and two real Base Sepolia x402 settlements are verified, including the full CLI BLOCKED → purchase → CLEARED path, without changing frozen product logic or exposing local credentials.
 
 ## Workspace
 
@@ -28,6 +28,9 @@ Active objective: Completed—fresh Base Sepolia x402 seller and buyer EOAs are 
 
 ## Current Context
 
+- The local Base Sepolia buyer and seller were funded and the existing x402
+  integration completed two real `$0.001` test-USDC settlements. The second was
+  the end-to-end CLI product flow. Virtuals ACP remains unconfigured and unclaimed.
 - This turn is limited to local x402 wallet generation, ignored `.env` setup,
   empty `.env.example` placeholders, security verification, and tests. No
   funding, payment attempt, ACP wallet, or frozen-code change is authorized.
@@ -42,6 +45,20 @@ Active objective: Completed—fresh Base Sepolia x402 seller and buyer EOAs are 
 
 ## Work Completed
 
+- Confirmed public Base Sepolia balances before payment: buyer held `0.05` ETH
+  and `20` USDC; seller held `0.02` ETH and `20` USDC.
+- Ran the credential-gated x402 test through the real facilitator. It received
+  HTTP 402, paid `$0.001` USDC, retried to HTTP 200, and returned successful
+  transaction `0xc635…a9cb7`.
+- Ran the actual CLI path against the local rights-holder server and an isolated
+  Sibyl database. Paid Instagram US+UK first blocked with no packet;
+  `acquire-grant` settled transaction `0x6335…e46d9`;
+  the identical attempt then cleared and wrote its packet. Owned database and
+  packet artifacts were cleaned.
+- Verified both receipts at status `1` and final balances of `19.998` buyer USDC
+  and `20.002` seller USDC, exactly matching two `$0.001` transfers.
+- Quoted the multiword ACP offering value in local `.env` and `.env.example` so
+  the documented `source .env` flow is shell-safe; no ACP adapter changed.
 - Generated two fresh, distinct Ethereum EOAs with installed `eth_account` for
   Base Sepolia x402. Addresses and private material are stored only in local
   mode-`0600` `.env`; no wallet material is recorded in this handoff.
@@ -186,20 +203,23 @@ Active objective: Completed—fresh Base Sepolia x402 seller and buyer EOAs are 
 | Local x402 wallet validation | passed | Two fresh distinct EOAs; buyer key/address derivation verified; `.env` mode `0600` and ignored by `.gitignore:20`; no secret value logged to project state, 2026-09-03 |
 | Full suite after wallet setup | passed | `.venv/bin/pytest -q` → `22 passed, 2 skipped in 8.08s`; unfunded x402 and unregistered/funded ACP integrations remained honest skips, 2026-09-03 |
 | Tracked secret scan after wallet setup | passed | `git grep -I -E '0x[0-9a-fA-F]{64}' -- ':!.env.example'` returned no tracked matches; `.env` absent from status, 2026-09-03 |
+| Funded x402 integration | passed | Credential-gated test performed real HTTP 402 → `$0.001` USDC → HTTP 200; transaction `0xc635…a9cb7`, 2026-09-04 |
+| Funded CLI product flow | passed | Local seller returned 402; release BLOCKED/no packet → real `acquire-grant` transaction `0x6335…e46d9` → identical attempt CLEARED/packet, 2026-09-04 |
+| Base Sepolia receipts | passed | Both settlement receipts status `1`; post-run balances buyer `19.998` USDC, seller `20.002` USDC, 2026-09-04 |
+| Remaining test suite | passed | `.venv/bin/pytest -q -k 'not real_base_sepolia_buyer_round_trip'` → `22 passed, 1 skipped, 1 deselected in 5.38s`; only ACP skipped, while the deselected funded test passed separately, 2026-09-04 |
 
 ## Risks And Blockers
 
-- No publication blocker remains. The two live partner integrations still
-  require funded credentials and remain honestly skipped/unclaimed as noted below.
+- No x402 blocker remains: Base Sepolia funding, facilitator settlement, WARM
+  entity update, and BLOCKED → CLEARED export are verified. Virtuals ACP still
+  requires registered/funded credentials and remains honestly unclaimed.
 - README file:line references are exact for this checkpoint and must be updated if `memory.py`, `gate.py`, or `export.py` shifts.
 - Virtuals ACP code is wired but remains unclaimed as live: all five required
   registration variables are absent, so no job was initiated and no job ID
   exists. The real integration test is skipped rather than mocked.
 - `virtuals-acp==0.3.23` emits an upstream `websockets.legacy` deprecation
   warning under the current dependency set; tests still pass.
-- The x402 runtime and local wallet variables are ready, but both fresh wallets
-  are unfunded. No payment was attempted and no settlement or transaction can
-  be claimed from this checkpoint.
+- x402 evidence is testnet-only. It proves Base Sepolia execution, not mainnet.
 
 ## Next Actions
 
@@ -211,9 +231,8 @@ Active objective: Completed—fresh Base Sepolia x402 seller and buyer EOAs are 
 4. Run `tests/test_acp_job.py` and retain the real job ID/escrow evidence. At
    the Sep 5–7 workshop, confirm the Python Base Sepolia V2/self-evaluation flow
    counts before claiming Virtuals.
-5. Fund the local x402 buyer with Base Sepolia test ETH and USDC and the seller
-   address as needed, then run the funded integration and retain real settlement
-   evidence.
+5. Rehearse the recorded take with the verified x402 path and retain the real
+   transaction link on screen.
 
 ## Session Handoff
 
@@ -251,3 +270,5 @@ Active objective: Completed—fresh Base Sepolia x402 seller and buyer EOAs are 
 | 2026-09-03T22:32:39+01:00 | Codex | Began local Base Sepolia wallet setup | Clean tracking branch at `f0ec0c0`; `.env` absent and ignored; `eth_account` available; no key material written to tracked files |
 | 2026-09-03T22:33:56+01:00 | Codex | Completed unfunded local x402 wallet setup | Fresh seller/buyer EOAs stored only in ignored mode-`0600` `.env`; 22 passed, two funded integration skips; tracked secret scan clean |
 | 2026-09-03T22:36:31+01:00 | Codex | Published non-secret wallet setup metadata | Commit `2d3c697` reached `origin/main`; local and remote SHAs matched; `.env` remained ignored and untracked |
+| 2026-09-04T00:03:16+01:00 | Codex | Began funded Base Sepolia x402 verification | Clean `origin/main` tracking branch at `ec2ce40`; ignored mode-`0600` `.env` present; user reports wallets funded |
+| 2026-09-04T00:07:32+01:00 | Codex | Verified funded x402 integration and CLI path | Two real `$0.001` Base Sepolia USDC settlements confirmed; CLI changed identical attempt from BLOCKED/no packet to CLEARED/packet; only ACP remains live-skipped |

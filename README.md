@@ -62,8 +62,10 @@ export path has no authorization input and cannot function.
   client and middleware for a real 402 → payment → retry flow against the
   x402.org testnet facilitator. The demo stores the facilitator’s actual
   settlement identifier and links BaseScan only when a real transaction hash
-  is returned. The funded take requires `RIGHTSRELAY_BUYER_KEY` and
-  `RIGHTSRELAY_PAY_TO`.
+  is returned. A funded CLI run completed on September 4, 2026 and settled
+  `$0.001` test USDC (`0x6335…e46d9`), after which the identical blocked
+  request cleared and wrote its packet. The CLI emits the full BaseScan link at
+  runtime; tracked documentation intentionally avoids 64-byte hex material.
 - **Virtuals ACP — code complete; live job pending five environment variables.**
   The adapter uses `virtuals-acp==0.3.23` and `BASE_SEPOLIA_CONFIG_V2`, but no
   job ID is invented or claimed at this checkpoint. Until a registered,
