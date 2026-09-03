@@ -3,9 +3,9 @@
 > Living handoff for Codex sessions. Read this file before working. Do not put
 > secrets or raw credential-bearing values here.
 
-Last updated: `2026-09-03T21:02:45+01:00`
-Status: `PUBLISHED_AND_VERIFIED`
-Active objective: Completed—full suite and offline kill/recall rehearsal passed, and clean `main` is published to the public GitHub repository without changing frozen product logic.
+Last updated: `2026-09-03T22:33:56+01:00`
+Status: `LOCAL_X402_WALLETS_READY_UNFUNDED`
+Active objective: Completed—fresh Base Sepolia x402 seller and buyer EOAs are stored only in ignored local `.env`; the human must fund them before any live settlement attempt.
 
 ## Workspace
 
@@ -27,6 +27,9 @@ Active objective: Completed—full suite and offline kill/recall rehearsal passe
 
 ## Current Context
 
+- This turn is limited to local x402 wallet generation, ignored `.env` setup,
+  empty `.env.example` placeholders, security verification, and tests. No
+  funding, payment attempt, ACP wallet, or frozen-code change is authorized.
 - This turn is limited to verification, offline rehearsal, publication hygiene,
   README repository URL, and public GitHub publication. Frozen product logic
   and partner lifecycles remain read-only unless an existing test fails.
@@ -38,6 +41,15 @@ Active objective: Completed—full suite and offline kill/recall rehearsal passe
 
 ## Work Completed
 
+- Generated two fresh, distinct Ethereum EOAs with installed `eth_account` for
+  Base Sepolia x402. Addresses and private material are stored only in local
+  mode-`0600` `.env`; no wallet material is recorded in this handoff.
+- Added the empty `RIGHTSRELAY_BUYER_ADDRESS` placeholder to `.env.example`.
+  The seller process requires only `RIGHTSRELAY_PAY_TO`, so no seller private
+  key was stored.
+- Verified the buyer private key derives to the configured buyer address, `.env`
+  is ignored and absent from Git status, and tracked files contain no 64-byte
+  hex private-key material.
 - Restored GitHub authentication as `dmetagame`, created the public repository
   `https://github.com/dmetagame/rightsrelay`, and added it as HTTPS `origin`.
 - Audited tracked paths and full filename history before publication. No `.env`,
@@ -170,6 +182,9 @@ Active objective: Completed—full suite and offline kill/recall rehearsal passe
 | Offline process rehearsal | passed | Uvicorn PID `383605` → SIGTERM → PID `383649`; recalled `CLEARED_LIMITED`, then BLOCKED/no packet → offline `apply-grant` → CLEARED/packet, 2026-09-03 |
 | README citations | passed | `memory.py:36` write, `memory.py:47` read, `gate.py:6` policy, and `export.py:22` export remain exact, 2026-09-03 |
 | Public GitHub publication | passed | `origin/main` tracking enabled; GitHub API reports `visibility=public`, `isPrivate=false`, default branch `main`, 2026-09-03 |
+| Local x402 wallet validation | passed | Two fresh distinct EOAs; buyer key/address derivation verified; `.env` mode `0600` and ignored by `.gitignore:20`; no secret value logged to project state, 2026-09-03 |
+| Full suite after wallet setup | passed | `.venv/bin/pytest -q` → `22 passed, 2 skipped in 8.08s`; unfunded x402 and unregistered/funded ACP integrations remained honest skips, 2026-09-03 |
+| Tracked secret scan after wallet setup | passed | `git grep -I -E '0x[0-9a-fA-F]{64}' -- ':!.env.example'` returned no tracked matches; `.env` absent from status, 2026-09-03 |
 
 ## Risks And Blockers
 
@@ -181,9 +196,9 @@ Active objective: Completed—full suite and offline kill/recall rehearsal passe
   exists. The real integration test is skipped rather than mocked.
 - `virtuals-acp==0.3.23` emits an upstream `websockets.legacy` deprecation
   warning under the current dependency set; tests still pass.
-- The x402 runtime is wired, but a real Base Sepolia settlement cannot yet be
-  claimed: neither `RIGHTSRELAY_BUYER_KEY` nor `RIGHTSRELAY_PAY_TO` is present.
-  No payment was attempted and no transaction exists from this checkpoint.
+- The x402 runtime and local wallet variables are ready, but both fresh wallets
+  are unfunded. No payment was attempted and no settlement or transaction can
+  be claimed from this checkpoint.
 
 ## Next Actions
 
@@ -195,7 +210,9 @@ Active objective: Completed—full suite and offline kill/recall rehearsal passe
 4. Run `tests/test_acp_job.py` and retain the real job ID/escrow evidence. At
    the Sep 5–7 workshop, confirm the Python Base Sepolia V2/self-evaluation flow
    counts before claiming Virtuals.
-5. Complete the funded x402 integration and retain the real settlement evidence.
+5. Fund the local x402 buyer with Base Sepolia test ETH and USDC and the seller
+   address as needed, then run the funded integration and retain real settlement
+   evidence.
 
 ## Session Handoff
 
@@ -230,3 +247,5 @@ Active objective: Completed—full suite and offline kill/recall rehearsal passe
 | 2026-09-03T20:56:41+01:00 | Codex | Began end-to-end verification and publication | GitHub authentication restored as `dmetagame`; public repository created; sensitive-path history audit clean; required ignore patterns completed |
 | 2026-09-03T20:59:05+01:00 | Codex | Completed pre-push verification and offline rehearsal | 22 passed, two credential-funded skips; real PID change and BLOCKED → offline grant → CLEARED packet flow verified; artifacts cleaned |
 | 2026-09-03T21:02:45+01:00 | Codex | Published and verified public repository | `main` pushed with upstream tracking; GitHub reports `visibility=public`, `isPrivate=false`, default branch `main`; remote SHA matched local `4a6a0e1` before this final handoff commit |
+| 2026-09-03T22:32:39+01:00 | Codex | Began local Base Sepolia wallet setup | Clean tracking branch at `f0ec0c0`; `.env` absent and ignored; `eth_account` available; no key material written to tracked files |
+| 2026-09-03T22:33:56+01:00 | Codex | Completed unfunded local x402 wallet setup | Fresh seller/buyer EOAs stored only in ignored mode-`0600` `.env`; 22 passed, two funded integration skips; tracked secret scan clean |
