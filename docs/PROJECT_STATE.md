@@ -3,15 +3,16 @@
 > Living handoff for Codex sessions. Read this file before working. Do not put
 > secrets or raw credential-bearing values here.
 
-Last updated: `2026-09-03T20:59:05+01:00`
-Status: `VERIFIED_READY_TO_PUSH`
-Active objective: Verify the complete build, rehearse the offline kill/recall flow, create a public GitHub repository, and push a clean tracking branch without changing frozen product logic.
+Last updated: `2026-09-03T21:02:45+01:00`
+Status: `PUBLISHED_AND_VERIFIED`
+Active objective: Completed—full suite and offline kill/recall rehearsal passed, and clean `main` is published to the public GitHub repository without changing frozen product logic.
 
 ## Workspace
 
 - Repository: public GitHub repository at `https://github.com/dmetagame/rightsrelay`
 - Worktree: `/home/rouma/rightsrelay`
 - Branch: `main`
+- Upstream: `origin/main`
 - Implementation checkpoint: `03cf2b1` (`feat: add filmable release demo console`)
 - Protected releases/artifacts: `src/rightsrelay/gate.py`, `src/rightsrelay/models.py`, existing MemoryClient call shapes, and both x402/ACP adapters are frozen unless an existing test turns red
 
@@ -168,11 +169,12 @@ Active objective: Verify the complete build, rehearse the offline kill/recall fl
 | Full pre-push suite | passed | `.venv/bin/python -m pytest -q` → `22 passed, 2 skipped in 6.00s`; skips are only the credential-funded ACP and x402 integrations, 2026-09-03 |
 | Offline process rehearsal | passed | Uvicorn PID `383605` → SIGTERM → PID `383649`; recalled `CLEARED_LIMITED`, then BLOCKED/no packet → offline `apply-grant` → CLEARED/packet, 2026-09-03 |
 | README citations | passed | `memory.py:36` write, `memory.py:47` read, `gate.py:6` policy, and `export.py:22` export remain exact, 2026-09-03 |
+| Public GitHub publication | passed | `origin/main` tracking enabled; GitHub API reports `visibility=public`, `isPrivate=false`, default branch `main`, 2026-09-03 |
 
 ## Risks And Blockers
 
-- Public `origin` exists but has not yet received the verified branch; upstream
-  tracking must be confirmed after the first push.
+- No publication blocker remains. The two live partner integrations still
+  require funded credentials and remain honestly skipped/unclaimed as noted below.
 - README file:line references are exact for this checkpoint and must be updated if `memory.py`, `gate.py`, or `export.py` shifts.
 - Virtuals ACP code is wired but remains unclaimed as live: all five required
   registration variables are absent, so no job was initiated and no job ID
@@ -185,9 +187,7 @@ Active objective: Verify the complete build, rehearse the offline kill/recall fl
 
 ## Next Actions
 
-1. Push `main` to public `origin`, confirm upstream tracking and clean worktree,
-   and verify GitHub reports `PUBLIC`/`isPrivate=false`.
-2. In the Virtuals sandbox, register distinct buyer and RightsRelay provider
+1. In the Virtuals sandbox, register distinct buyer and RightsRelay provider
    agents, create smart wallets, whitelist the development wallet, and register
    the `Rights review` offering with the documented JSON schema.
 3. Fund the buyer with the offering's test-USDC fare; configure the five ACP
@@ -229,3 +229,4 @@ Active objective: Verify the complete build, rehearse the offline kill/recall fl
 | 2026-09-03T15:15:00+01:00 | Codex | Created local demo-console checkpoint | Commit `03cf2b1`; no push attempted because no remote exists, GitHub authentication is invalid, and this turn forbids remote work |
 | 2026-09-03T20:56:41+01:00 | Codex | Began end-to-end verification and publication | GitHub authentication restored as `dmetagame`; public repository created; sensitive-path history audit clean; required ignore patterns completed |
 | 2026-09-03T20:59:05+01:00 | Codex | Completed pre-push verification and offline rehearsal | 22 passed, two credential-funded skips; real PID change and BLOCKED → offline grant → CLEARED packet flow verified; artifacts cleaned |
+| 2026-09-03T21:02:45+01:00 | Codex | Published and verified public repository | `main` pushed with upstream tracking; GitHub reports `visibility=public`, `isPrivate=false`, default branch `main`; remote SHA matched local `4a6a0e1` before this final handoff commit |
