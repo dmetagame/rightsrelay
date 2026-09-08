@@ -14,12 +14,17 @@ from rightsrelay.memory import AuthorizationMemory
 from rightsrelay.models import UseAuthorization
 
 
-HAS_LIVE_ACP_ENV = not missing_acp_env()
+HAS_LIVE_ACP_ENV = (
+    not missing_acp_env()
+    and os.environ.get("RIGHTSRELAY_ACP_ALLOW_TRANSACTIONS") == "1"
+    and bool(os.environ.get("RIGHTSRELAY_ACP_MAX_USDC"))
+    and os.environ.get("RIGHTSRELAY_RUN_LIVE_ACP_TEST") == "1"
+)
 
 
 @pytest.mark.skipif(
     not HAS_LIVE_ACP_ENV,
-    reason="requires registered and funded Virtuals ACP buyer/provider environment",
+    reason="requires ACP signers, funded Base mainnet buyer, approved cap, transaction opt-in and RIGHTSRELAY_RUN_LIVE_ACP_TEST=1",
 )
 def test_real_acp_job_delivers_and_updates_the_shared_authorization(tmp_path) -> None:
     database = tmp_path / "rightsrelay.sqlite"

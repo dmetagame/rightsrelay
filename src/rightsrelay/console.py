@@ -13,6 +13,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
 from sibyl_memory_client import NotFoundError
 
+from rightsrelay.acp_client import ACP_CONTRACT_EXPLORER
 from rightsrelay.app import PACKET_RELATIVE_PATH
 from rightsrelay.journal import Journal
 from rightsrelay.memory import (
@@ -21,10 +22,6 @@ from rightsrelay.memory import (
     MemoryUnavailableError,
 )
 
-ACP_CONTRACT_EXPLORER = (
-    "https://sepolia.basescan.org/address/"
-    "0xdf54E6Ed6cD1d0632d973ADECf96597b7e87893c"
-)
 TRANSACTION_HASH = re.compile(r"0x[0-9a-fA-F]{64}")
 DISPLAY_STATUSES = {"PENDING", "CLEARED_LIMITED", "BLOCKED", "CLEARED"}
 

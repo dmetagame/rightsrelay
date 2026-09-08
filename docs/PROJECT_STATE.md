@@ -3,9 +3,26 @@
 > Living handoff for Codex sessions. Read this file before working. Do not put
 > secrets or raw credential-bearing values here.
 
-Last updated: `2026-09-04T00:10:26+01:00`
-Status: `FUNDED_X402_VERIFIED`
-Active objective: Completed—funding and two real Base Sepolia x402 settlements are verified, including the full CLI BLOCKED → purchase → CLEARED path, without changing frozen product logic or exposing local credentials.
+Last updated: `2026-09-08T20:12:56Z`
+Status: `ACP_MAINNET_ADAPTER_OFFLINE_VERIFIED`
+Active objective: ACP-only compatibility migration for EconomyOS agents on Base mainnet implemented and offline verified. Live job remains blocked on signer authorization and separate cost approval. x402 stays on Base Sepolia.
+
+## Current Migration Checkpoint
+
+- Observed clean `main` tracking `origin/main` at `3e15723349da2431f25800cef7f8dc86b059d82c`; older checkpoints below are historical, not current HEAD.
+- Initial sandboxed `gh auth status` reported invalid authentication; an approved network-enabled recheck succeeded as `dmetagame`. No interactive login was needed.
+- User registered buyer/reviewer wallets and reports saving `Rights review`. The new UI uses wallet IDs and Privy signer keys, not the old Python adapter's numeric session entity IDs. Live registration and offering remain unverified.
+- ACP adapters alone are unfrozen for this migration. Gate, models, MemoryClient wrapper, x402, and UI design remain frozen.
+- Test seams remain the user-specified `run_acp_review` and provider memory mutation/fresh-process recall, including fail-closed configuration and no-spend behavior. No fake network job will be used as live evidence.
+- Implemented `acp/runner.ts` with the official npm SDK and a JSON-only Python `acp_bridge.py`. Published SDK 0.1.12 uses `AcpAgent.create({ evmProvider })`, not upstream examples' `provider`. Lifecycle: registered offering -> `setBudget` -> `fund` -> persisted limited grant -> `submit` -> memory verification -> `complete` -> onchain completion check.
+- Mainnet chain is fixed to 8453. All onchain execution defaults disabled; an explicit transaction opt-in AND positive approved USDC cap are required. No funds or signer authorization was attempted. Registered fee, identity, evaluator, zero-hook, and onchain budget are checked; active jobs require explicit resume instead of duplicate creation. Cap covers fare, not gas.
+- `apply_limited_grant` reuses the existing Sibyl set/get signatures, is idempotent for same-job replay, and refuses to downgrade an existing paid grant or overwrite another review. Provider receives only structured ACP requirement data, never a transcript. Each Node role receives only its own key; x402 keys are excluded.
+- Changed ACP client/provider, new Node package/lock/tests, Python bridge/tests, provider launch script, `.env.example`, README and shot list. `console.py` only imports the verified mainnet ACP explorer constant; no UI design change. Removed old Python ACP dependency. Frozen gate, models, memory wrapper and x402 files have no diff.
+- Public wallet addresses/IDs supplied by the user were merged into ignored local `.env`; new signer fields remain empty, transaction flag is 0, cap is empty. Existing x402 secrets were not read into tool output or modified. No private key was generated.
+- Remaining dependency audit after patching js-cookie/ws and compatible viem/infra updates: 0 high/critical, 15 low/5 moderate affected entries (elliptic, uuid, stream-json dependency chains). Record as an unresolved pre-funding risk, not a clean audit; no broad breaking overrides applied.
+- Next: authorize dedicated restricted signers for buyer/reviewer locally (never chat); inspect the live registered offering and wallet policies; obtain separate explicit fee/gas approval; only then configure cap/transaction switch and run the real integration. No ACP job ID exists or is claimed.
+- Baseline `.venv/bin/pytest -q`: 22 passed, 2 credential-funded skips. New mainnet approval guard tested red then green at the existing `run_acp_review` seam. Official npm SDK pinned to `@virtuals-protocol/acp-node-v2@0.1.12`; dependency download retried after a connection reset.
+- Final verification: `.venv/bin/pytest -q` -> 27 passed, 2 skipped (ACP lacks signers/approved funded opt-in; existing x402 keys deliberately not loaded for this offline turn); `npm run check --prefix acp` passed; `npm test --prefix acp` -> 3 passed. Provider/demo shell syntax and `git diff --check` passed. `.env` remains mode 0600, ignored at `.gitignore:21`, untracked; tracked/new source hex-key scan returned no matches. No live job, payment, signer creation, or credential export occurred.
 
 ## Workspace
 
@@ -16,7 +33,7 @@ Active objective: Completed—funding and two real Base Sepolia x402 settlements
 - Implementation checkpoint: `03cf2b1` (`feat: add filmable release demo console`)
 - Local wallet-setup metadata checkpoint: `2d3c697` (`chore: add buyer address env placeholder`), verified on `origin/main`
 - Funded x402 evidence checkpoint: `33ea6c3` (`docs: record funded x402 verification`), verified on `origin/main`
-- Protected releases/artifacts: `src/rightsrelay/gate.py`, `src/rightsrelay/models.py`, existing MemoryClient call shapes, and both x402/ACP adapters are frozen unless an existing test turns red
+- Protected releases/artifacts: `src/rightsrelay/gate.py`, `src/rightsrelay/models.py`, existing MemoryClient call shapes, x402 adapters, and UI design are frozen. ACP-only migration was explicitly authorized on September 8.
 
 ## Constraints
 
@@ -28,6 +45,9 @@ Active objective: Completed—funding and two real Base Sepolia x402 settlements
 - No secrets in Git.
 
 ## Current Context
+
+The following notes describe earlier completed turns; the Current Migration
+Checkpoint above supersedes their turn-specific scope and ACP configuration.
 
 - The local Base Sepolia buyer and seller were funded and the existing x402
   integration completed two real `$0.001` test-USDC settlements. The second was
@@ -215,25 +235,26 @@ Active objective: Completed—funding and two real Base Sepolia x402 settlements
   entity update, and BLOCKED → CLEARED export are verified. Virtuals ACP still
   requires registered/funded credentials and remains honestly unclaimed.
 - README file:line references are exact for this checkpoint and must be updated if `memory.py`, `gate.py`, or `export.py` shifts.
-- Virtuals ACP code is wired but remains unclaimed as live: all five required
-  registration variables are absent, so no job was initiated and no job ID
-  exists. The real integration test is skipped rather than mocked.
+- Virtuals ACP uses the new mainnet wallet-ID/signer adapter. Public wallet
+  configuration is local, but both signer keys and spending approval are absent.
+  No job was initiated and no job ID exists. The funded test is skipped, not mocked.
 - `virtuals-acp==0.3.23` emits an upstream `websockets.legacy` deprecation
   warning under the current dependency set; tests still pass.
 - x402 evidence is testnet-only. It proves Base Sepolia execution, not mainnet.
 
 ## Next Actions
 
-1. In the Virtuals sandbox, register distinct buyer and RightsRelay provider
-   agents, create smart wallets, whitelist the development wallet, and register
-   the `Rights review` offering with the documented JSON schema.
-3. Fund the buyer with the offering's test-USDC fare; configure the five ACP
-   variables without recording their values; start `run_acp_provider.sh`.
-4. Run `tests/test_acp_job.py` and retain the real job ID/escrow evidence. At
-   the Sep 5–7 workshop, confirm the Python Base Sepolia V2/self-evaluation flow
-   counts before claiming Virtuals.
-5. Rehearse the recorded take with the verified x402 path and retain the real
-   transaction link on screen.
+1. Obtain approval to authorize restricted dedicated signers for the two
+   EconomyOS wallets. Save only to local ignored `.env`, never chat or Git.
+2. Verify the live registered `Rights review` offering and required schemas;
+   review residual dependency advisories and wallet policies. Quote the actual
+   job fare and any gas/platform costs, then obtain separate spending approval.
+3. After approval/funding only, set the approved USDC cap and transaction flag,
+   start `run_acp_provider.sh`, and run `acp-review` or the explicitly opted-in
+   `tests/test_acp_job.py`. Inspect active jobs before resuming after a timeout.
+4. Retain real mainnet ACP job/escrow evidence; ask hackathon organizers to
+   confirm eligibility before claiming the partner multiplier. Rehearse with
+   the separately verified Base Sepolia x402 rights-purchase path.
 
 ## Session Handoff
 
@@ -247,6 +268,7 @@ Active objective: Completed—funding and two real Base Sepolia x402 settlements
 
 | Timestamp | Session/agent | Event | Result |
 | --- | --- | --- | --- |
+| 2026-09-08T20:12:56Z | Codex | Completed approved ACP-only EconomyOS/mainnet compatibility update | 27 Python passed/2 live skips, 3 Node safety tests passed, SDK types checked, high/critical audit findings patched; lower-severity advisories documented; no signers or spending authorized |
 | 2026-09-02T18:25:00+01:00 | Codex | Initialized RightsRelay repository | Frozen core implementation in progress; remote not configured |
 | 2026-09-02T20:44:12+01:00 | Codex | Completed SDK proof and deterministic gate checkpoint | Real Sibyl round-trip passed; 7 gate tests passed |
 | 2026-09-02T20:49:06+01:00 | Codex | Completed frozen memory/export checkpoint | Commit `cc5d7c1`; 11 tests passed; deletion and real fresh-process requirements verified; partner stacks remain unclaimed |

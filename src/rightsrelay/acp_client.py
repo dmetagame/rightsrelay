@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 import json
+import math
 import os
+import selectors
+import subprocess
+import sys
 import time
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -9,27 +13,22 @@ from pathlib import Path
 
 from rightsrelay.memory import AUTHORIZATION_NAME, AuthorizationMemory
 
-ACP_CONFIG_NAME = "BASE_SEPOLIA_CONFIG_V2"
+ACP_CONFIG_NAME = "BASE_MAINNET_ACP_NODE_V2"
+# Official @virtuals-protocol/acp-node-v2@0.1.12 ACP_CONTRACT_ADDRESSES[8453].
+ACP_CONTRACT_EXPLORER = "https://basescan.org/address/0x238E541BfefD82238730D00a2208E5497F1832E0"
 DEFAULT_OFFERING_NAME = "Rights review"
 DEFAULT_TIMEOUT_SECONDS = 300.0
 DEFAULT_POLL_SECONDS = 5.0
-
 SERVICE_REQUIREMENT = {
     "entity_name": AUTHORIZATION_NAME,
     "requested_use": {
-        "channel": "youtube",
-        "paid": False,
-        "territories": ["UK"],
-        "date": "2026-09-02",
+        "channel": "youtube", "paid": False,
+        "territories": ["UK"], "date": "2026-09-02",
     },
 }
-
 REQUIRED_ACP_ENV = (
-    "WHITELISTED_WALLET_PRIVATE_KEY",
-    "BUYER_AGENT_WALLET_ADDRESS",
-    "BUYER_ENTITY_ID",
-    "SELLER_AGENT_WALLET_ADDRESS",
-    "SELLER_ENTITY_ID",
+    "BUYER_AGENT_WALLET_ADDRESS", "BUYER_WALLET_ID", "BUYER_SIGNER_PRIVATE_KEY",
+    "SELLER_AGENT_WALLET_ADDRESS", "SELLER_WALLET_ID", "SELLER_SIGNER_PRIVATE_KEY",
 )
 
 
@@ -39,7 +38,7 @@ def missing_acp_env(environ: Mapping[str, str] | None = None) -> list[str]:
 
 
 class ACPReviewError(RuntimeError):
-    """Raised when the real ACP lifecycle cannot prove a memory-backed review."""
+    """The real ACP lifecycle has not proved a memory-backed review."""
 
 
 @dataclass(frozen=True)
@@ -49,33 +48,23 @@ class ACPReviewResult:
     contract_explorer_url: str
 
 
-def _positive_float(name: str, default: float) -> float:
-    raw = os.environ.get(name)
-    try:
-        value = default if raw is None else float(raw)
-    except ValueError as exc:
-        raise ACPReviewError(f"{name} must be a number") from exc
-    if value <= 0:
-        raise ACPReviewError(f"{name} must be greater than zero")
-    return value
+def require_transaction_approval() -> None:
+    if os.environ.get("RIGHTSRELAY_ACP_ALLOW_TRANSACTIONS") != "1":
+        raise ACPReviewError(
+            "ACP mainnet transactions are disabled; obtain explicit cost approval "
+            "before setting RIGHTSRELAY_ACP_ALLOW_TRANSACTIONS=1"
+        )
 
 
-def _assert_memory_matches_delivery(
-    *,
-    memory_path: str | Path,
-    job_id: int,
-    deliverable: object,
+def assert_memory_matches_delivery(
+    *, memory_path: str | Path, job_id: int, deliverable: object,
 ) -> None:
     if not isinstance(deliverable, dict):
         raise ACPReviewError("ACP job did not provide a structured deliverable")
     authorization = AuthorizationMemory(memory_path).get_authorization()
-    if (
-        authorization.status != "CLEARED_LIMITED"
-        or authorization.acp_job_id != str(job_id)
-    ):
-        raise ACPReviewError(
-            "ACP delivery exists but the shared authorization was not updated"
-        )
+    if (authorization.status != "CLEARED_LIMITED"
+            or authorization.acp_job_id != str(job_id)):
+        raise ACPReviewError("ACP delivery exists but the shared authorization was not updated")
     expected = {
         "entity_name": AUTHORIZATION_NAME,
         "version": authorization.version,
@@ -85,132 +74,112 @@ def _assert_memory_matches_delivery(
         "territories": authorization.territories,
         "expires_on": authorization.expires_on.isoformat(),
     }
-    if deliverable != expected:
+    if json.dumps(deliverable, sort_keys=True) != json.dumps(expected, sort_keys=True):
         raise ACPReviewError("ACP deliverable does not match the shared authorization")
 
 
+def adapter_command(role: str, memory_path: str | Path) -> list[str]:
+    root = Path(__file__).resolve().parents[2] / "acp"
+    tsx = root / "node_modules" / "tsx" / "dist" / "loader.mjs"
+    if not tsx.is_file():
+        raise ACPReviewError("ACP Node dependencies missing; run npm ci --prefix acp")
+    return ["node", "--import", str(tsx), str(root / "runner.ts"), role,
+            str(Path(memory_path).expanduser().resolve())]
+
+
+def adapter_environment() -> dict[str, str]:
+    # x402 credentials and unrelated application secrets never enter Node.
+    names = (*REQUIRED_ACP_ENV, "PATH", "HOME", "PYTHONPATH", "NODE_EXTRA_CA_CERTS",
+             "RIGHTSRELAY_ACP_ALLOW_TRANSACTIONS", "RIGHTSRELAY_ACP_MAX_USDC",
+             "RIGHTSRELAY_ACP_TIMEOUT_SECONDS", "RIGHTSRELAY_ACP_POLL_SECONDS",
+             "RIGHTSRELAY_ACP_RESUME_JOB_ID")
+    result = {name: os.environ[name] for name in names if name in os.environ}
+    result["RIGHTSRELAY_PYTHON"] = sys.executable
+    return result
+
+
 def run_acp_review(
-    *,
-    memory_path: str | Path,
-    timeout_seconds: float | None = None,
+    *, memory_path: str | Path, timeout_seconds: float | None = None,
     poll_seconds: float | None = None,
 ) -> ACPReviewResult:
+    require_transaction_approval()
     missing = missing_acp_env()
     if missing:
         raise ACPReviewError(f"ACP CONFIG MISSING: {', '.join(missing)}")
-
-    from virtuals_acp.client import VirtualsACP
-    from virtuals_acp.configs.configs import BASE_SEPOLIA_CONFIG_V2
-    from virtuals_acp.contract_clients.contract_client_v2 import ACPContractClientV2
-    from virtuals_acp.models import ACPJobPhase
-
-    timeout = timeout_seconds or _positive_float(
-        "RIGHTSRELAY_ACP_TIMEOUT_SECONDS",
-        DEFAULT_TIMEOUT_SECONDS,
-    )
-    interval = poll_seconds or _positive_float(
-        "RIGHTSRELAY_ACP_POLL_SECONDS",
-        DEFAULT_POLL_SECONDS,
-    )
-    buyer_contract = ACPContractClientV2(
-        wallet_private_key=os.environ["WHITELISTED_WALLET_PRIVATE_KEY"],
-        agent_wallet_address=os.environ["BUYER_AGENT_WALLET_ADDRESS"],
-        entity_id=int(os.environ["BUYER_ENTITY_ID"]),
-        config=BASE_SEPOLIA_CONFIG_V2,
-    )
-    acp = VirtualsACP(
-        acp_contract_clients=buyer_contract,
-        skip_socket_connection=True,
-    )
-    print(f"ACP CONFIG: {ACP_CONFIG_NAME}")
-    provider_address = os.environ["SELLER_AGENT_WALLET_ADDRESS"]
-    provider = acp.get_agent(provider_address, show_hidden_offerings=True)
-    if provider is None:
-        raise ACPReviewError(
-            f"ACP provider {provider_address} is not registered in the sandbox"
+    # No network job can be created if Sibyl is missing.
+    AuthorizationMemory(memory_path).get_authorization()
+    environment = adapter_environment()
+    environment.pop("SELLER_SIGNER_PRIVATE_KEY", None)
+    for key, supplied, default in (
+        ("RIGHTSRELAY_ACP_TIMEOUT_SECONDS", timeout_seconds, DEFAULT_TIMEOUT_SECONDS),
+        ("RIGHTSRELAY_ACP_POLL_SECONDS", poll_seconds, DEFAULT_POLL_SECONDS),
+    ):
+        try:
+            value = float(supplied if supplied is not None else environment.get(key, default))
+        except ValueError as exc:
+            raise ACPReviewError(f"{key} must be a positive finite number") from exc
+        if not math.isfinite(value) or value <= 0:
+            raise ACPReviewError(f"{key} must be a positive finite number")
+        environment[key] = str(value)
+    try:
+        worker = subprocess.Popen(
+            adapter_command("buyer", memory_path), env=environment,
+            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
         )
-
-    offering_name = os.environ.get(
-        "RIGHTSRELAY_ACP_OFFERING_NAME",
-        DEFAULT_OFFERING_NAME,
-    )
-    offering = next(
-        (
-            candidate
-            for candidate in provider.job_offerings
-            if candidate.name.casefold() == offering_name.casefold()
-        ),
-        None,
-    )
-    if offering is None:
-        available = ", ".join(item.name for item in provider.job_offerings) or "none"
-        raise ACPReviewError(
-            f"ACP offering {offering_name!r} was not found; available: {available}"
+    except OSError as exc:
+        raise ACPReviewError("ACP Node runtime could not be started") from exc
+    result = None
+    deadline = time.monotonic() + float(environment["RIGHTSRELAY_ACP_TIMEOUT_SECONDS"]) + 30
+    pending = b""
+    try:
+        with selectors.DefaultSelector() as selector:
+            selector.register(worker.stdout, selectors.EVENT_READ)
+            while True:
+                if time.monotonic() >= deadline:
+                    raise ACPReviewError("ACP timed out; inspect active jobs before retrying")
+                if not selector.select(timeout=0.5):
+                    continue
+                chunk = os.read(worker.stdout.fileno(), 65536)
+                if not chunk:
+                    break
+                pending += chunk
+                if len(pending) > 131072:
+                    raise ACPReviewError("ACP adapter output exceeded its limit")
+                while b"\n" in pending:
+                    line, pending = pending.split(b"\n", 1)
+                    try:
+                        item = json.loads(line)
+                    except (ValueError, UnicodeError):
+                        continue
+                    if not isinstance(item, dict):
+                        continue
+                    # Only adapter-owned safe messages, never raw SDK stderr.
+                    if item.get("type") == "progress" and isinstance(item.get("stage"), str):
+                        print(f"ACP: {item['stage']}", flush=True)
+                    elif item.get("type") == "result":
+                        result = item
+        worker.wait(timeout=5)
+    finally:
+        if worker.poll() is None:
+            worker.terminate()
+            try:
+                worker.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                worker.kill()
+                worker.wait()
+        worker.stdout.close()
+    if worker.returncode != 0 or result is None:
+        raise ACPReviewError("ACP adapter failed; check configuration, approval, and active jobs (raw SDK output withheld)")
+    try:
+        job_id = int(result["job_id"])
+        if job_id <= 0 or result["phase"] != "COMPLETED":
+            raise ValueError("incomplete result")
+        url = result["contract_explorer_url"]
+        if not isinstance(url, str) or not url.startswith("https://basescan.org/address/"):
+            raise ValueError("wrong network explorer")
+        assert_memory_matches_delivery(
+            memory_path=memory_path, job_id=job_id, deliverable=result["deliverable"],
         )
-
-    print(f"ACP REQUEST: {json.dumps(SERVICE_REQUIREMENT, sort_keys=True)}")
-    job_id = offering.initiate_job(
-        service_requirement=SERVICE_REQUIREMENT,
-        evaluator_address=acp.wallet_address,
-    )
-    if not isinstance(job_id, int) or job_id <= 0:
-        raise ACPReviewError("Virtuals ACP did not return a valid onchain job ID")
-    print(f"ACP JOB ID: {job_id}")
-
-    deadline = time.monotonic() + timeout
-    payment_submitted = False
-    evaluation_submitted = False
-    last_phase = None
-    while time.monotonic() < deadline:
-        job = acp.get_job_by_onchain_id(job_id)
-        if job.phase != last_phase:
-            print(f"ACP PHASE: {job.phase.name}")
-            last_phase = job.phase
-
-        if (
-            job.phase == ACPJobPhase.NEGOTIATION
-            and not payment_submitted
-            and job.latest_memo is not None
-            and job.latest_memo.next_phase == ACPJobPhase.TRANSACTION
-        ):
-            job.pay_and_accept_requirement(
-                "Buyer accepts the scoped rights-review requirement"
-            )
-            payment_submitted = True
-            print("ACP ESCROW: payment submitted")
-        elif job.phase == ACPJobPhase.EVALUATION and not evaluation_submitted:
-            _assert_memory_matches_delivery(
-                memory_path=memory_path,
-                job_id=job_id,
-                deliverable=job.get_deliverable(),
-            )
-            job.evaluate(
-                True,
-                "Self-evaluation: shared authorization matches the deliverable",
-            )
-            evaluation_submitted = True
-            print("ACP EVALUATION: accepted by buyer")
-        elif job.phase == ACPJobPhase.COMPLETED:
-            _assert_memory_matches_delivery(
-                memory_path=memory_path,
-                job_id=job_id,
-                deliverable=job.get_deliverable(),
-            )
-            return ACPReviewResult(
-                job_id=job_id,
-                phase=job.phase.name,
-                contract_explorer_url=(
-                    "https://sepolia.basescan.org/address/"
-                    f"{BASE_SEPOLIA_CONFIG_V2.contract_address}"
-                ),
-            )
-        elif job.phase == ACPJobPhase.REJECTED:
-            raise ACPReviewError(
-                f"ACP job {job_id} was rejected: {job.rejection_reason or 'no reason'}"
-            )
-        elif job.phase == ACPJobPhase.EXPIRED:
-            raise ACPReviewError(f"ACP job {job_id} expired")
-
-        time.sleep(interval)
-
-    raise ACPReviewError(f"ACP job {job_id} timed out after {timeout:g} seconds")
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ACPReviewError("ACP adapter returned an invalid completion result") from exc
+    return ACPReviewResult(job_id=job_id, phase="COMPLETED", contract_explorer_url=url)

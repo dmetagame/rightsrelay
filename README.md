@@ -30,10 +30,10 @@ The policy is `src/rightsrelay/gate.py:6`; the fail-closed export boundary is
 
 The source-of-truth write is `src/rightsrelay/memory.py:36`, where
 `AuthorizationMemory.set_authorization` calls
-`MemoryClient.set_entity(category, name, body)`. Every producer, reviewer, ACP,
-and paid-grant mutation reaches this same path for
-`campaign-aurora:neon-drive`. The ACP provider enters that path at
-`src/rightsrelay/acp_provider.py:26`; the x402 success path calls the shared
+`MemoryClient.set_entity(category, name, body)`. Producer, local reviewer, and
+paid-grant mutations use this wrapper for `campaign-aurora:neon-drive`.
+The separate ACP provider writes the identical Sibyl entity directly at
+`src/rightsrelay/acp_provider.py:49`; the x402 success path calls the shared
 grant mutation at `src/rightsrelay/app.py:259` only after a settled grant is
 returned.
 
@@ -43,8 +43,9 @@ The source-of-truth read is `src/rightsrelay/memory.py:47`, where
 `AuthorizationMemory.get_authorization` calls
 `MemoryClient.get_entity(category, name)` and validates `row["body"]`. Missing
 memory raises and fails closed; it is never converted into an authorization.
+The ACP provider reads that entity at `src/rightsrelay/acp_provider.py:27`.
 The ACP client verifies the persisted entity before evaluation at
-`src/rightsrelay/acp_client.py:63`.
+`src/rightsrelay/acp_client.py:64`, through the local JSON-only `acp_bridge.py`.
 
 ## How memory made this possible
 
@@ -66,11 +67,12 @@ export path has no authorization input and cannot function.
   `$0.001` test USDC (`0x6335…e46d9`), after which the identical blocked
   request cleared and wrote its packet. The CLI emits the full BaseScan link at
   runtime; tracked documentation intentionally avoids 64-byte hex material.
-- **Virtuals ACP — code complete; live job pending five environment variables.**
-  The adapter uses `virtuals-acp==0.3.23` and `BASE_SEPOLIA_CONFIG_V2`, but no
-  job ID is invented or claimed at this checkpoint. Until a registered,
-  funded job completes with the five variables below, the submission must not
-  claim Virtuals as an exercised partner stack.
+- **Virtuals ACP — mainnet compatibility adapter implemented; live job pending.**
+  The adapter is pinned to `@virtuals-protocol/acp-node-v2@0.1.12` for EconomyOS
+  wallet IDs and Privy signers on Base mainnet (8453). Offline checks do not prove
+  settlement: no real ACP job ID exists yet. Signer authorization, registration
+  verification, and separate spending approval remain required. Do not claim
+  Virtuals as an exercised partner stack until a real funded job completes.
 
 ACP review escrow and the later x402 rights purchase are separate events.
 
@@ -83,12 +85,15 @@ during the build window.
 
 ## How to run session 1 / kill / session 2
 
-Python 3.11 is required by `virtuals-acp`:
+Use Python 3.11 and Node.js 22 from this source checkout. The old Python ACP
+SDK has been replaced only for ACP connectivity; Sibyl and x402 stay Python:
 
 ```bash
 python3.11 -m venv .venv
 .venv/bin/pip install -e '.[dev]'
-cp .env.example .env
+npm ci --prefix acp
+# Only on a fresh checkout: never overwrite an existing .env.
+test -e .env || cp .env.example .env
 ```
 
 Set one absolute `RIGHTSRELAY_DB` path. For Base Sepolia x402, set the seller
@@ -98,20 +103,50 @@ address in `RIGHTSRELAY_PAY_TO` and buyer private key in
 and test USDC using the [Circle faucet](https://faucet.circle.com/), selecting
 Base Sepolia.
 
-For a live ACP review, configure these five values and start the provider:
+For ACP, keep these values only in the ignored local `.env`. Wallet IDs are
+the alphanumeric EVM wallet IDs shown in EconomyOS, NOT legacy numeric entity
+IDs. Signer keys are separately authorized keys, not the x402 wallet keys:
 
 ```text
-WHITELISTED_WALLET_PRIVATE_KEY
 BUYER_AGENT_WALLET_ADDRESS
-BUYER_ENTITY_ID
+BUYER_WALLET_ID
+BUYER_SIGNER_PRIVATE_KEY
 SELLER_AGENT_WALLET_ADDRESS
-SELLER_ENTITY_ID
+SELLER_WALLET_ID
+SELLER_SIGNER_PRIVATE_KEY
 ```
 
 Register the `Rights review` offering through
-[Virtuals ACP](https://os.virtuals.io/acp/) before the take. Self-evaluation is
+[Virtuals ACP](https://app.virtuals.io/acp/) before the take. Use fixed pricing,
+no extra funds, no subscriptions, and a structured request with `entity_name`
+and `requested_use` matching `SERVICE_REQUIREMENT` in `acp_client.py`.
+Self-evaluation is
 intentional: the client evaluates only after comparing the deliverable with the
 shared Sibyl entity.
+
+Mainnet transaction execution defaults OFF. After the human has separately
+approved the registered fee and any gas/platform costs, configure
+`RIGHTSRELAY_ACP_MAX_USDC` to the approved job-fee cap and
+`RIGHTSRELAY_ACP_ALLOW_TRANSACTIONS=1`. The cap covers the job fare, not gas.
+Do not set these as part of credential setup alone. Each process receives only
+its own signing key; neither receives x402 keys. Use limited wallet policies.
+
+The buyer uses `createJobFromOffering`; the provider calls `setBudget`, waits
+for onchain funding, calls the existing `apply_limited_grant`, and `submit`s
+JSON. The buyer checks memory before `complete` and confirms onchain completion.
+Only structured requirement messages are passed to Python—never chat history.
+Replayed delivery reuses the same authorization version. Existing grants are
+not overwritten by a different review. One provider process per shared DB is
+supported; do not run concurrent reviewers or edit grants during a live job.
+
+After an interrupted run, inspect active ACP jobs before retrying. The buyer
+refuses to create another job if an active Base job exists. To resume a verified
+existing job, explicitly set `RIGHTSRELAY_ACP_RESUME_JOB_ID` to its real numeric
+onchain ID. A timeout does not imply escrow was refunded. Never invent an ID.
+
+The published SDK accepts `AcpAgent.create({ evmProvider })`, differing from
+some upstream examples using `provider`. Installed type declarations are the
+integration reference. See the [official migration guide](https://github.com/Virtual-Protocol/acp-node-v2/blob/main/migration.md).
 
 Load the environment without printing secrets, then start the rights-holder
 x402 seller and optional ACP provider in separate terminals:
@@ -157,7 +192,14 @@ Run all automated verification with:
 
 ```bash
 .venv/bin/pytest -q
+npm run check --prefix acp
+npm test --prefix acp
 ```
+
+The ACP integration test additionally requires `RIGHTSRELAY_RUN_LIVE_ACP_TEST=1`;
+it can spend real USDC and must not be enabled for ordinary offline tests.
+The x402 funded test retains its existing credential-based opt-in; don't load
+funded wallet variables when running an offline-only suite.
 
 ## Honest limitations
 
@@ -165,10 +207,16 @@ Run all automated verification with:
 - The team owns `Neon Drive`; `rightsrelay-demo` is the rights holder operating
   the demo 402 server. No BMI, Meta, TikTok, or other third-party integration is
   claimed.
-- Payment settles on Base Sepolia, not mainnet. Mainnet is disabled unless
+- The x402 rights purchase settles on Base Sepolia, not mainnet. x402 mainnet is disabled unless
   `RIGHTSRELAY_X402_MAINNET=1` and a production facilitator are explicitly set;
   the x402.org test facilitator is never used for mainnet.
-- Virtuals ACP uses disclosed self-evaluation. A local `review-limited` take is
+- ACP is configured separately for Base mainnet; no mainnet job is claimed yet.
+  Virtuals ACP uses disclosed self-evaluation. A local `review-limited` take is
   an offline memory fallback and does not count as an ACP job or partner claim.
+- ACP dependency audit after compatible patches: no high/critical findings;
+  15 low and 5 moderate affected dependency entries remain (elliptic, uuid,
+  stream-json and their dependents). This is not a clean security audit or
+  proof of live safety. Review these and signer policies before funding; no
+  mainnet signing keys or transaction approval were added during migration.
 - Scope is one track, one campaign, one authorization, and paid-social music
   rights only.

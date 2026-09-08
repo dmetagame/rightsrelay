@@ -80,3 +80,9 @@ def test_acp_provider_updates_the_shared_entity_and_a_fresh_process_recalls_it(
         "acp_job_id": "8472",
         "actor": "reviewer.acp",
     }
+
+    # A replay of the same funded job must reuse its memory result, not bump
+    # the version or append a second review event.
+    assert apply_limited_grant(memory_path=database, acp_job_id="8472") == deliverable
+    assert AuthorizationMemory(database).get_authorization().version == 2
+    assert len(Journal(database).read_recent(limit=5)) == 1

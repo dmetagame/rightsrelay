@@ -6,9 +6,10 @@ PYTHON_BIN="${PYTHON_BIN:-.venv/bin/python}"
 missing=""
 
 for name in \
-  WHITELISTED_WALLET_PRIVATE_KEY \
   SELLER_AGENT_WALLET_ADDRESS \
-  SELLER_ENTITY_ID
+  SELLER_WALLET_ID \
+  SELLER_SIGNER_PRIVATE_KEY \
+  BUYER_AGENT_WALLET_ADDRESS
 do
   if [ -z "${!name:-}" ]; then
     if [ -n "$missing" ]; then

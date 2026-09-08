@@ -1,8 +1,10 @@
 # RightsRelay — 4:00 unedited take
 
 Use one absolute `RIGHTSRELAY_DB` path in every process. Start the x402 seller
-before recording. If the five ACP variables are configured, also start the ACP
-provider. Keep a terminal beside the board so the real process kill is visible.
+before recording. Start the ACP provider only after its six registration/signer
+variables, explicit mainnet transaction approval, and approved USDC cap are set.
+ACP is Base mainnet; the later x402 purchase remains Base Sepolia. Keep a terminal
+beside the board so the real process kill is visible.
 
 ## Shot list
 
@@ -17,7 +19,7 @@ provider. Keep a terminal beside the board so the real process kill is visible.
 
 - Click **Init Aurora**.
 - With live ACP, click **ACP review** and keep the real job/escrow output visible.
-- Without the five ACP variables, click **Review (offline)** and say exactly:
+- Without live ACP prerequisites, click **Review (offline)** and say exactly:
   “Reviewer is local this take; ACP job is the same write path, live job at
   workshop.” Never imply that the local review created an ACP job.
 

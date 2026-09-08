@@ -1,0 +1,23 @@
+{
+  "name": "rightsrelay-acp",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts"
+  },
+  "dependencies": {
+    "@virtuals-protocol/acp-node-v2": "0.1.12",
+    "@account-kit/infra": "4.88.5",
+    "viem": "2.56.3"
+  },
+  "overrides": {
+    "js-cookie": "3.0.8",
+    "ws@^8.0.0": "8.21.3"
+  },
+  "devDependencies": {
+    "@types/node": "22.19.15",
+    "tsx": "4.21.0",
+    "typescript": "5.9.3"
+  }
+}
