@@ -3,12 +3,13 @@
 > Living handoff for Codex sessions. Read this file before working. Do not put
 > secrets or raw credential-bearing values here.
 
-Last updated: `2026-09-08T20:12:56Z`
+Last updated: `2026-09-08T20:18:13Z`
 Status: `ACP_MAINNET_ADAPTER_OFFLINE_VERIFIED`
 Active objective: ACP-only compatibility migration for EconomyOS agents on Base mainnet implemented and offline verified. Live job remains blocked on signer authorization and separate cost approval. x402 stays on Base Sepolia.
 
 ## Current Migration Checkpoint
 
+- Implemented/published checkpoint: `e7596f22836886adfd2c344cd349bc88874022de` on `main`; `git push origin main` succeeded and `git ls-remote origin refs/heads/main` matched that SHA. Worktree was clean with `origin/main` tracking before this state-only handoff update. No secret/local-data paths are tracked.
 - Observed clean `main` tracking `origin/main` at `3e15723349da2431f25800cef7f8dc86b059d82c`; older checkpoints below are historical, not current HEAD.
 - Initial sandboxed `gh auth status` reported invalid authentication; an approved network-enabled recheck succeeded as `dmetagame`. No interactive login was needed.
 - User registered buyer/reviewer wallets and reports saving `Rights review`. The new UI uses wallet IDs and Privy signer keys, not the old Python adapter's numeric session entity IDs. Live registration and offering remain unverified.
@@ -268,6 +269,7 @@ Checkpoint above supersedes their turn-specific scope and ACP configuration.
 
 | Timestamp | Session/agent | Event | Result |
 | --- | --- | --- | --- |
+| 2026-09-08T20:18:13Z | Codex | Published and remotely verified ACP migration | `e7596f2` matched GitHub `refs/heads/main`; worktree clean, `.env` ignored; live ACP still awaits signer and cost approval |
 | 2026-09-08T20:12:56Z | Codex | Completed approved ACP-only EconomyOS/mainnet compatibility update | 27 Python passed/2 live skips, 3 Node safety tests passed, SDK types checked, high/critical audit findings patched; lower-severity advisories documented; no signers or spending authorized |
 | 2026-09-02T18:25:00+01:00 | Codex | Initialized RightsRelay repository | Frozen core implementation in progress; remote not configured |
 | 2026-09-02T20:44:12+01:00 | Codex | Completed SDK proof and deterministic gate checkpoint | Real Sibyl round-trip passed; 7 gate tests passed |
