@@ -27,8 +27,9 @@ SERVICE_REQUIREMENT = {
     },
 }
 REQUIRED_ACP_ENV = (
-    "BUYER_AGENT_WALLET_ADDRESS", "BUYER_WALLET_ID", "BUYER_SIGNER_PRIVATE_KEY",
-    "SELLER_AGENT_WALLET_ADDRESS", "SELLER_WALLET_ID", "SELLER_SIGNER_PRIVATE_KEY",
+    "BUYER_AGENT_WALLET_ADDRESS", "BUYER_WALLET_ID", "BUYER_SIGNER_PUBLIC_KEY",
+    "SELLER_AGENT_WALLET_ADDRESS", "SELLER_WALLET_ID", "SELLER_SIGNER_PUBLIC_KEY",
+    "RIGHTSRELAY_ACP_SIGNER_BINARY",
 )
 
 
@@ -90,6 +91,7 @@ def adapter_command(role: str, memory_path: str | Path) -> list[str]:
 def adapter_environment() -> dict[str, str]:
     # x402 credentials and unrelated application secrets never enter Node.
     names = (*REQUIRED_ACP_ENV, "PATH", "HOME", "PYTHONPATH", "NODE_EXTRA_CA_CERTS",
+             "XDG_DATA_HOME", "XDG_CONFIG_HOME", "DBUS_SESSION_BUS_ADDRESS",
              "RIGHTSRELAY_ACP_ALLOW_TRANSACTIONS", "RIGHTSRELAY_ACP_MAX_USDC",
              "RIGHTSRELAY_ACP_TIMEOUT_SECONDS", "RIGHTSRELAY_ACP_POLL_SECONDS",
              "RIGHTSRELAY_ACP_RESUME_JOB_ID")
@@ -109,7 +111,7 @@ def run_acp_review(
     # No network job can be created if Sibyl is missing.
     AuthorizationMemory(memory_path).get_authorization()
     environment = adapter_environment()
-    environment.pop("SELLER_SIGNER_PRIVATE_KEY", None)
+    environment.pop("SELLER_SIGNER_PUBLIC_KEY", None)
     for key, supplied, default in (
         ("RIGHTSRELAY_ACP_TIMEOUT_SECONDS", timeout_seconds, DEFAULT_TIMEOUT_SECONDS),
         ("RIGHTSRELAY_ACP_POLL_SECONDS", poll_seconds, DEFAULT_POLL_SECONDS),

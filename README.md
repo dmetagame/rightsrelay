@@ -45,7 +45,7 @@ The source-of-truth read is `src/rightsrelay/memory.py:47`, where
 memory raises and fails closed; it is never converted into an authorization.
 The ACP provider reads that entity at `src/rightsrelay/acp_provider.py:27`.
 The ACP client verifies the persisted entity before evaluation at
-`src/rightsrelay/acp_client.py:64`, through the local JSON-only `acp_bridge.py`.
+`src/rightsrelay/acp_client.py:65`, through the local JSON-only `acp_bridge.py`.
 
 ## How memory made this possible
 

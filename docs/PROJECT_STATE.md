@@ -3,9 +3,21 @@
 > Living handoff for Codex sessions. Read this file before working. Do not put
 > secrets or raw credential-bearing values here.
 
-Last updated: `2026-09-09T20:00:30Z`
-Status: `ACP_SIGNERS_AUTHORIZED_ADAPTER_CONNECTION_PENDING`
-Active objective: Both existing EconomyOS agents now have verified ACP_ONLY signers in local CLI storage. Request permission for two focused frozen-adapter compatibility corrections before connecting them to RightsRelay. Mainnet spending remains unapproved and disabled; x402 stays on Base Sepolia.
+Last updated: `2026-09-09T20:08:00Z`
+Status: `ACP_SIGNER_COMPATIBILITY_AWAITING_TEST_BOUNDARY_CONFIRMATION`
+Active objective: User approved only connecting the official locally stored signers and matching the registered rights_review offering. Keep the core, x402, and ACP lifecycle frozen; mainnet spending remains unapproved and disabled.
+
+## Approved Compatibility Follow-up
+
+- Starting clean `main` / `origin/main`: `aaa20b416e1007bf404483029fbb86f8a7f63f10`; GitHub authentication verified. Previous signer verification handoff is published. No secret-bearing configuration is tracked.
+- Confirmed installed SDK 0.1.12 supports `signFn(payload: Uint8Array): Promise<string>`; official CLI 1.0.35 delegates to its local signer binary with `sign --public-key ... --payload <hex>` and consumes a JSON `signature`. No private-key export or new protocol is needed.
+- TDD skill selected. Requested confirmation of the existing acp-review/Node entrypoints plus external signer-callback/registered-offering test boundaries before adding tests. Baseline checks running without funded integration credentials or transaction opt-ins.
+- Plan: configure public signer selectors and official executable path only, replace raw-key transport with role-specific signing callback, use exact rights_review name, verify fail-closed behavior and local signatures without a network transaction, update relevant setup documentation.
+- Both actual approved signers signed a fixed harmless offline challenge through the official CLI binary; Node crypto verified each SHA-256/P256 DER signature against its registered public key. No signature or secret was logged, and no network authentication or transaction was performed by this diagnostic.
+- Completed the first tracer at the previously agreed `run_acp_review` seam: public-key/binary configuration no longer requests raw private keys; missing Sibyl authorization still prevents Node/signer launch. New test failed on the obsolete private-key requirements before the config change, then passed. Existing wrapper raises MemoryUnavailableError chained from NotFoundError; preserved it unchanged.
+- Only Python client configuration/environment forwarding is prepared so far. Node still requires its old raw-key input, provider setup and docs still need alignment, and the offering-name mismatch remains. Do not attempt a live ACP run at this intermediate checkpoint.
+- TDD pause: the asynchronous confirmation request for the new signer-callback/registered-offering test boundaries has not been answered. Existing entrypoint tests were already user-specified; no tests have been written at the unconfirmed new boundaries. Resume the approved two-fix implementation after confirmation; spending remains disabled.
+- Checkpoint verification: 28 passed, 2 funded-integration skips, 1 upstream warning in 7.72s; TypeScript check passed before these Python-only edits; git diff --check passed. Updated the existing exact-missing-vars CLI test to the new public configuration contract without relaxing its assertions. README ACP read citation shifted to line 65; frozen memory/gate/x402 source unchanged.
 
 ## September 9 Signer Setup
 
@@ -287,6 +299,7 @@ Checkpoint above supersedes their turn-specific scope and ACP configuration.
 
 | Timestamp | Session/agent | Event | Result |
 | --- | --- | --- | --- |
+| 2026-09-09T20:08:00Z | Codex | Verified official local signer protocol and prepared Python config | Both real offline signatures verified; public-config/memory-refusal tracer red then green; 28 passed/2 skipped. Remaining adapter work awaits TDD test-boundary confirmation; no spending |
 | 2026-09-09T20:00:30Z | Codex | Confirmed both signer approvals and policies | Both completed and ACP_ONLY; 27 offline tests passed, 2 funded integrations skipped. No funds spent; callback/name adapter corrections await scoped approval |
 | 2026-09-09T19:25:45Z | Codex | Completed official CLI authentication and read-only registry verification | Both existing wallet identities match; real offering is `rights_review`, 0.01 USDC. Recorded frozen adapter name mismatch; signer browser approvals next, spending still disabled |
 | 2026-09-08T20:18:13Z | Codex | Published and remotely verified ACP migration | `e7596f2` matched GitHub `refs/heads/main`; worktree clean, `.env` ignored; live ACP still awaits signer and cost approval |
