@@ -3,9 +3,19 @@
 > Living handoff for Codex sessions. Read this file before working. Do not put
 > secrets or raw credential-bearing values here.
 
-Last updated: `2026-09-08T20:18:13Z`
-Status: `ACP_MAINNET_ADAPTER_OFFLINE_VERIFIED`
-Active objective: ACP-only compatibility migration for EconomyOS agents on Base mainnet implemented and offline verified. Live job remains blocked on signer authorization and separate cost approval. x402 stays on Base Sepolia.
+Last updated: `2026-09-09T11:32:05Z`
+Status: `ACP_SIGNER_SETUP_IN_PROGRESS`
+Active objective: Authorize dedicated signers for the two existing EconomyOS agents using the official ACP CLI/browser flow. User approved signer setup, not mainnet spending. All product code stays frozen; x402 stays on Base Sepolia.
+
+## September 9 Signer Setup
+
+- Reconciled clean `/home/rouma/rightsrelay`, `main` tracking `origin/main`, at `f8b118c6a894cab75cb5ac8c353d5fe4d04cdab2`. The older migration checkpoint below is historical.
+- Network-enabled `gh auth status` succeeds as `dmetagame`; public origin unchanged. Official npm registry reports `@virtuals-protocol/acp-cli@1.0.35` (Node >=20.19.0).
+- Installed the official CLI through pinned `npx @virtuals-protocol/acp-cli@1.0.35` outside project dependencies and read its entire bundled `SKILL.md`. CLI `skill check` reports version 1.0.35; bundled frontmatter still says 1.0.28, so the installed document was re-read as authoritative. `configure start --help` verified the nonblocking browser flow.
+- Authentication is the next external dependency: run `configure start --json`, show its approval URL immediately, then `configure complete --request-id ... --json` after human sign-in. Do not put the URL or request credentials in this public state file. No agent creation, live job, payment, or signer authorization has occurred this session.
+- Preserve `RIGHTSRELAY_ACP_ALLOW_TRANSACTIONS=0`; obtain separate explicit fare/gas approval before any live job. Never reuse x402 wallet keys as Privy authorization keys or publish signer material.
+- Next: official split browser authentication, list existing agents, then authorize restricted dedicated signers. Human browser approval is an external dependency.
+- Verification this session: GitHub authenticated; `.env` remains mode 0600 and ignored at `.gitignore:21`; `git diff --check` passed. Documentation-only change; product tests not rerun (last verified 27 passed, 2 funded-integration skips). No product source or dependency lockfile changed.
 
 ## Current Migration Checkpoint
 
