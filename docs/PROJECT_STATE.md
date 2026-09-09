@@ -3,9 +3,9 @@
 > Living handoff for Codex sessions. Read this file before working. Do not put
 > secrets or raw credential-bearing values here.
 
-Last updated: `2026-09-09T19:25:45Z`
-Status: `ACP_SIGNER_SETUP_IN_PROGRESS`
-Active objective: Authorize dedicated signers for the two existing EconomyOS agents using the official ACP CLI/browser flow. User approved signer setup, not mainnet spending. All product code stays frozen; x402 stays on Base Sepolia.
+Last updated: `2026-09-09T20:00:30Z`
+Status: `ACP_SIGNERS_AUTHORIZED_ADAPTER_CONNECTION_PENDING`
+Active objective: Both existing EconomyOS agents now have verified ACP_ONLY signers in local CLI storage. Request permission for two focused frozen-adapter compatibility corrections before connecting them to RightsRelay. Mainnet spending remains unapproved and disabled; x402 stays on Base Sepolia.
 
 ## September 9 Signer Setup
 
@@ -16,8 +16,12 @@ Active objective: Authorize dedicated signers for the two existing EconomyOS age
 - Observed/published starting HEAD `d22ae101b3b3c2d7bc8d3cdb99068ed90309a544` on clean `main` tracking `origin/main`.
 - Live provider offering is actually named `rights_review`, fixed 0.01 USDC, SLA 20 minutes, requiredFunds=false, visible. Requirements and deliverable schemas match the structured entity-based design. Compatibility blocker: frozen `acp/runner.ts` hard-codes `Rights review` and does not consume the legacy local offering-name variable. Do not silently rename the live offering or claim local env alignment fixes this. Resolve the exact-name mismatch in a separately verified adapter correction before a live job.
 - Preserve `RIGHTSRELAY_ACP_ALLOW_TRANSACTIONS=0`; obtain separate explicit fare/gas approval before any live job. Never reuse x402 wallet keys as Privy authorization keys or publish signer material.
-- Next: initiate the official `agent add-signer --policy restricted --no-wait --json` flow for each verified agent and relay each link immediately; confirm via `signer-status` after human approval. No signer is claimed authorized until that check succeeds. Keep approval links/request material out of this public file.
+- Both browser approvals verified with official `agent signer-status --json`: status=completed for buyer and reviewer. `agent signer-policy --json` independently returned ACP_ONLY for each. CLI persisted each agent's signer association locally. No private key, bearer token, approval link, or request material is stored in this public file.
+- Reconciled clean `main` tracking `origin/main` at `0f66af627c189836b9166112ee3f8d91bcb17ca4` before this handoff. GitHub authentication succeeds. No product source or `.env` change made this session.
+- Second compatibility blocker: the adapter requires BUYER_SIGNER_PRIVATE_KEY / SELLER_SIGNER_PRIVATE_KEY, but the CLI stores keys locally and invokes its signer binary through a signing callback. Installed SDK 0.1.12 explicitly supports `signFn?: (payload: Uint8Array) => Promise<string>` in `dist/providers/evm/privyAlchemyEvmProviderAdapter.d.ts`; the official CLI uses this path. Do not extract keys into chat or claim `.env` has been wired. Prefer connecting the approved local signer via this supported callback after scoped adapter-edit approval.
+- Next: request approval for only (1) the keystore signing callback and (2) the exact `rights_review` offering-name correction, with offline regression tests. Then inspect funding/costs and request separate spending approval. No ACP job exists; authorization of a signer is not live-job evidence.
 - Verification this session: GitHub authenticated; `.env` remains mode 0600 and ignored at `.gitignore:21`; `git diff --check` passed. Documentation-only change; product tests not rerun (last verified 27 passed, 2 funded-integration skips). No product source or dependency lockfile changed.
+- Latest verification, 20:00 UTC: offline `pytest -q` returned 27 passed, 2 skipped, 1 upstream deprecation warning in 8.58s. Funded x402 variables and ACP transaction/live-test opt-ins were explicitly removed from the test environment so no payment could occur. `.env` remains 0600, ignored; local transaction flag remains 0 and cap empty. This supersedes the earlier no-test-rerun note.
 
 ## Current Migration Checkpoint
 
@@ -257,8 +261,10 @@ Checkpoint above supersedes their turn-specific scope and ACP configuration.
 
 ## Next Actions
 
-1. Obtain approval to authorize restricted dedicated signers for the two
-   EconomyOS wallets. Save only to local ignored `.env`, never chat or Git.
+1. Both restricted signers are authorized in the official CLI's local storage.
+   Obtain approval for the two frozen-adapter compatibility corrections:
+   supported keystore signing callback and exact `rights_review` offering name.
+   Keep keys local; do not require raw private-key export into `.env`.
 2. Verify the live registered `Rights review` offering and required schemas;
    review residual dependency advisories and wallet policies. Quote the actual
    job fare and any gas/platform costs, then obtain separate spending approval.
@@ -281,6 +287,7 @@ Checkpoint above supersedes their turn-specific scope and ACP configuration.
 
 | Timestamp | Session/agent | Event | Result |
 | --- | --- | --- | --- |
+| 2026-09-09T20:00:30Z | Codex | Confirmed both signer approvals and policies | Both completed and ACP_ONLY; 27 offline tests passed, 2 funded integrations skipped. No funds spent; callback/name adapter corrections await scoped approval |
 | 2026-09-09T19:25:45Z | Codex | Completed official CLI authentication and read-only registry verification | Both existing wallet identities match; real offering is `rights_review`, 0.01 USDC. Recorded frozen adapter name mismatch; signer browser approvals next, spending still disabled |
 | 2026-09-08T20:18:13Z | Codex | Published and remotely verified ACP migration | `e7596f2` matched GitHub `refs/heads/main`; worktree clean, `.env` ignored; live ACP still awaits signer and cost approval |
 | 2026-09-08T20:12:56Z | Codex | Completed approved ACP-only EconomyOS/mainnet compatibility update | 27 Python passed/2 live skips, 3 Node safety tests passed, SDK types checked, high/critical audit findings patched; lower-severity advisories documented; no signers or spending authorized |
