@@ -3,7 +3,7 @@
 > Living handoff for Codex sessions. Read this file before working. Do not put
 > secrets or raw credential-bearing values here.
 
-Last updated: `2026-09-09T11:32:05Z`
+Last updated: `2026-09-09T19:25:45Z`
 Status: `ACP_SIGNER_SETUP_IN_PROGRESS`
 Active objective: Authorize dedicated signers for the two existing EconomyOS agents using the official ACP CLI/browser flow. User approved signer setup, not mainnet spending. All product code stays frozen; x402 stays on Base Sepolia.
 
@@ -12,9 +12,11 @@ Active objective: Authorize dedicated signers for the two existing EconomyOS age
 - Reconciled clean `/home/rouma/rightsrelay`, `main` tracking `origin/main`, at `f8b118c6a894cab75cb5ac8c353d5fe4d04cdab2`. The older migration checkpoint below is historical.
 - Network-enabled `gh auth status` succeeds as `dmetagame`; public origin unchanged. Official npm registry reports `@virtuals-protocol/acp-cli@1.0.35` (Node >=20.19.0).
 - Installed the official CLI through pinned `npx @virtuals-protocol/acp-cli@1.0.35` outside project dependencies and read its entire bundled `SKILL.md`. CLI `skill check` reports version 1.0.35; bundled frontmatter still says 1.0.28, so the installed document was re-read as authoritative. `configure start --help` verified the nonblocking browser flow.
-- Authentication is the next external dependency: run `configure start --json`, show its approval URL immediately, then `configure complete --request-id ... --json` after human sign-in. Do not put the URL or request credentials in this public state file. No agent creation, live job, payment, or signer authorization has occurred this session.
+- Browser authentication completed successfully through `configure complete --json`; credentials saved locally by the official CLI, never printed. Authenticated `agent list --json` returned exactly the existing buyer/reviewer; both EVM addresses and wallet IDs match the user's supplied values. GitHub authentication also succeeds. No agent or job was created and no payment occurred.
+- Observed/published starting HEAD `d22ae101b3b3c2d7bc8d3cdb99068ed90309a544` on clean `main` tracking `origin/main`.
+- Live provider offering is actually named `rights_review`, fixed 0.01 USDC, SLA 20 minutes, requiredFunds=false, visible. Requirements and deliverable schemas match the structured entity-based design. Compatibility blocker: frozen `acp/runner.ts` hard-codes `Rights review` and does not consume the legacy local offering-name variable. Do not silently rename the live offering or claim local env alignment fixes this. Resolve the exact-name mismatch in a separately verified adapter correction before a live job.
 - Preserve `RIGHTSRELAY_ACP_ALLOW_TRANSACTIONS=0`; obtain separate explicit fare/gas approval before any live job. Never reuse x402 wallet keys as Privy authorization keys or publish signer material.
-- Next: official split browser authentication, list existing agents, then authorize restricted dedicated signers. Human browser approval is an external dependency.
+- Next: initiate the official `agent add-signer --policy restricted --no-wait --json` flow for each verified agent and relay each link immediately; confirm via `signer-status` after human approval. No signer is claimed authorized until that check succeeds. Keep approval links/request material out of this public file.
 - Verification this session: GitHub authenticated; `.env` remains mode 0600 and ignored at `.gitignore:21`; `git diff --check` passed. Documentation-only change; product tests not rerun (last verified 27 passed, 2 funded-integration skips). No product source or dependency lockfile changed.
 
 ## Current Migration Checkpoint
@@ -279,6 +281,7 @@ Checkpoint above supersedes their turn-specific scope and ACP configuration.
 
 | Timestamp | Session/agent | Event | Result |
 | --- | --- | --- | --- |
+| 2026-09-09T19:25:45Z | Codex | Completed official CLI authentication and read-only registry verification | Both existing wallet identities match; real offering is `rights_review`, 0.01 USDC. Recorded frozen adapter name mismatch; signer browser approvals next, spending still disabled |
 | 2026-09-08T20:18:13Z | Codex | Published and remotely verified ACP migration | `e7596f2` matched GitHub `refs/heads/main`; worktree clean, `.env` ignored; live ACP still awaits signer and cost approval |
 | 2026-09-08T20:12:56Z | Codex | Completed approved ACP-only EconomyOS/mainnet compatibility update | 27 Python passed/2 live skips, 3 Node safety tests passed, SDK types checked, high/critical audit findings patched; lower-severity advisories documented; no signers or spending authorized |
 | 2026-09-02T18:25:00+01:00 | Codex | Initialized RightsRelay repository | Frozen core implementation in progress; remote not configured |
