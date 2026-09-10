@@ -4,10 +4,7 @@ RightsRelay is release-operations software, not legal advice.
 
 Public repository: https://github.com/dmetagame/rightsrelay
 
-Public submission site: https://dmetagame.github.io/rightsrelay/
-
-The custom domain `rightsrelay.rouma.online` will replace that URL after its
-Namecheap CNAME resolves and GitHub Pages verifies the domain.
+Public submission site: https://rightsrelay.rouma.online/
 
 ## What it does
 

@@ -3,9 +3,9 @@
 > Living handoff for Codex sessions. Read this file before working. Do not put
 > secrets or raw credential-bearing values here.
 
-Last updated: `2026-09-10T13:29:21Z`
-Status: `PUBLIC_SITE_LIVE_CUSTOM_DOMAIN_PENDING`
-Active objective: The credential-free RightsRelay submission microsite is live on GitHub Pages. The only deployment follow-up is the human's Namecheap CNAME for `rightsrelay.rouma.online`, followed by GitHub custom-domain verification. The frozen product core and partner lifecycles remain unchanged.
+Last updated: `2026-09-10T13:34:00Z`
+Status: `CUSTOM_DOMAIN_CONFIGURATION_IN_PROGRESS`
+Active objective: Namecheap's authoritative DNS now returns the correct CNAME for `rightsrelay.rouma.online`; publish the canonical-domain metadata, configure GitHub Pages, and verify HTTPS. The frozen product core and partner lifecycles remain unchanged.
 
 ## Public Site Deployment
 
@@ -16,7 +16,7 @@ Active objective: The credential-free RightsRelay submission microsite is live o
 - Existing verification remains green: Python `29 passed, 2 skipped` (only opt-in funded ACP/x402 integrations), TypeScript check passed, and all 9 Node tests passed. Frozen core/partner paths have no diff. A broad 64-hex scan found only the intentional public on-chain delivery-hash fixture in `acp/tests/delivery.test.ts`, not credential material.
 - GitHub Pages is enabled from the native `gh-pages` branch root. Deployment run `34482603157` completed successfully; the live page returned HTTP 200 and contained the expected RightsRelay, Virtuals ACP, x402, and entity evidence. HTTPS is enforced at `https://dmetagame.github.io/rightsrelay/`.
 - Published refs verified before this final state receipt: `origin/main` at `344d5205da67efb50bd25e83f7c17b6817ebcf8c` and `origin/gh-pages` at `828b3717e1652c71168a259c0ca82aa24e934f70`.
-- DNS for `rightsrelay.rouma.online` does not resolve yet. Add a Namecheap CNAME with host `rightsrelay` and value `dmetagame.github.io`; GitHub's custom-domain setting must wait for that record to resolve so the working default URL is not redirected prematurely.
+- Namecheap DNS is correctly configured: both authoritative nameservers and Google DNS return `rightsrelay.rouma.online CNAME dmetagame.github.io`; Cloudflare DNS had not yet propagated at the start of configuration.
 - The first push was rejected because the current GitHub OAuth token lacks `workflow` scope. Removed the unneeded Actions workflow and selected GitHub Pages' native `gh-pages` branch source instead; this avoided expanding token authority. The final main-branch tree contains no custom workflow, and the site commits are published.
 
 ## ACP Delivery Fallback Checkpoint
