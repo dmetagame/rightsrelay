@@ -19,6 +19,7 @@ Active objective: Hand off the completed demo video for human review/upload. The
 - Media verification: final video 1920x1080, yuv420p, H.264 at 30fps plus mono AAC; 6,600,253 bytes; full decode completed without errors; narration measured mean -15.8 dB and peak -1.5 dB. Contact-sheet review showed PENDING, CLEARED_LIMITED, process restart, BLOCKED, real x402 settlement, CLEARED, and packet evidence in sequence.
 - Remotion skill guidance affected the safe-area/readability and final-render checks, while the hackathon evidence rule led to a real continuous desktop capture instead of a composited protocol reenactment. No Remotion application was added to the product repository.
 - Cleanup removed only the isolated recording worktree/database/packet, generated narration fragments, temporary X11 tooling, process logs, and the redundant silent padded intermediate. The raw and final MP4 artifacts remain in `/home/rouma`; no recording process or local server remains running.
+- Windows delivery: copied the final narrated artifact to `/mnt/c/Users/predator triton/Downloads/RightsRelay-demo-final.mp4` without overwriting an existing file. Source and destination SHA-256 matched (`4e715c1d…34df`); delivered size is 6.3 MB. The source remains at `/home/rouma/RightsRelay-demo-final.mp4`.
 - Next: human watches `/home/rouma/RightsRelay-demo-final.mp4` once with sound, uploads it to the hackathon host, and records the public video/submission URL here. Do not rerun either paid integration merely to change styling.
 
 ## High-priority repair scope
