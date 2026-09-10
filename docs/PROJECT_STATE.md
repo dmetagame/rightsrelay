@@ -3,9 +3,16 @@
 > Living handoff for Codex sessions. Read this file before working. Do not put
 > secrets or raw credential-bearing values here.
 
-Last updated: `2026-09-10T08:17:51Z`
-Status: `ACP_LIVE_PREFLIGHT_VERIFIED_AWAITING_FUNDING_AND_SPEND_APPROVAL`
-Active objective: Real signer-authenticated registry/job reads now verified for both roles. Buyer has no Base mainnet USDC; obtain funding method/amount and separate spending approval before a real job. Core, x402, and ACP lifecycle are unchanged; transactions remain disabled.
+Last updated: `2026-09-10T08:26:20Z`
+Status: `ACP_FUNDED_AWAITING_EXPLICIT_SPEND_APPROVAL`
+Active objective: Funding and signer-authenticated read-only preflight are verified. Obtain explicit approval for one 0.01 USDC `rights_review` job before enabling the transaction flag/cap. Core, x402, and ACP lifecycle are unchanged; transactions remain disabled.
+
+## ACP Funding Checkpoint
+
+- At Base mainnet block 51119689, the registered buyer and reviewer wallets each held exactly 0.02 USDC and 0 ETH. The token read used canonical Base USDC at `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`; no transaction was sent.
+- Both approved local signers authenticated successfully for a read-only SDK check. Buyer and reviewer each reported no active Base jobs.
+- Spending remains disabled: `RIGHTSRELAY_ACP_ALLOW_TRANSACTIONS=0` and `RIGHTSRELAY_ACP_MAX_USDC` is empty. No job ID, escrow, payment, or Virtuals live-integration claim exists yet.
+- Next action requires human authorization: permit one live `rights_review` job at the registered fixed fare, capped at exactly 0.01 USDC from the buyer wallet, with no extra-fund request.
 
 ## Latest Live Read-only Preflight
 
