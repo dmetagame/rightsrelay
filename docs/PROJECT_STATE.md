@@ -3,9 +3,18 @@
 > Living handoff for Codex sessions. Read this file before working. Do not put
 > secrets or raw credential-bearing values here.
 
-Last updated: `2026-09-10T10:00:20Z`
-Status: `ACP_LIVE_JOB_COMPLETED_AND_FALLBACK_FIXED`
-Active objective: Record and submit the verified RightsRelay demo. Real Virtuals ACP job 78052 completed on Base mainnet, and the observed missing-deliverable behavior now has a fail-closed on-chain hash fallback. Transactions remain disabled.
+Last updated: `2026-09-10T13:24:05Z`
+Status: `PUBLIC_SITE_DEPLOYMENT_IN_PROGRESS`
+Active objective: Publish the credential-free RightsRelay submission microsite through GitHub Pages, verify its accessibility and deployment, then hand off the Namecheap CNAME for `rightsrelay.rouma.online`. The frozen product core and partner lifecycles remain unchanged.
+
+## Public Site Deployment (in progress)
+
+- Reconciled clean tracking `main` at `3ff5fd4f3dad8234684d3fdbd938557b7661e0d6`; GitHub authentication works and `origin` remains the public `dmetagame/rightsrelay` repository.
+- Added an uncommitted static site under `site/` and a GitHub Pages Actions workflow. This deployment intentionally exposes no FastAPI mutation endpoints, wallet keys, database, or release packet.
+- Visual direction is a release-control docket: cool slate/paper surfaces, red/green decision signals, condensed editorial typography, and evidence-first partner/memory sections. Desktop and mobile layouts were visually inspected.
+- Validation so far: `html-validate` passes; AccessLint 0.21.0 scanned 94 rules with zero violations after fixing one contrast issue and a nested landmark. A compact mobile check found no horizontal overflow, one H1, native-link interaction only, and visible 3px focus indicators under real Tab-key events. Human screen-reader announcement testing remains outside this automated audit.
+- Existing verification remains green: Python `29 passed, 2 skipped` (only opt-in funded ACP/x402 integrations), TypeScript check passed, and all 9 Node tests passed. Frozen core/partner paths have no diff. A broad 64-hex scan found only the intentional public on-chain delivery-hash fixture in `acp/tests/delivery.test.ts`, not credential material.
+- GitHub Pages is not yet enabled. Planned default URL is `https://dmetagame.github.io/rightsrelay/`; custom-domain configuration must wait for the human's Namecheap CNAME to resolve.
 
 ## ACP Delivery Fallback Checkpoint
 
@@ -350,6 +359,7 @@ Checkpoint above supersedes their turn-specific scope and ACP configuration.
 
 | Timestamp | Session/agent | Event | Result |
 | --- | --- | --- | --- |
+| 2026-09-10T13:24:05Z | Codex | Built and audited the credential-free public microsite | Static GitHub Pages site ready; HTML validation clean, 94 AccessLint rules zero violations, mobile keyboard/reflow check passed; 29 Python passed/2 funded skips, TypeScript passed, 9 Node passed |
 | 2026-09-10T09:58:49Z | Codex | Fixed the live ACP delivery-retrieval regression | TDD fallback verifies exact job/reviewer/on-chain hash against read-only Sibyl delivery; 29 Python passed/2 funded skips, TypeScript passed, 9 Node passed; no transaction |
 | 2026-09-10T08:50:29Z | Codex | Completed the authorized live Virtuals ACP job | Real job 78052 completed on Base mainnet; 0.01 USDC escrow; Sibyl CLEARED_LIMITED; on-chain delivery hash verified; no duplicate or extra funds; transactions disabled again |
 | 2026-09-10T08:26:20Z | Codex | Verified ACP wallet funding | Buyer and reviewer each held 0.02 Base mainnet USDC; signer-authenticated job lists empty; no spend |
