@@ -5,7 +5,7 @@ import json
 import sys
 
 from rightsrelay.acp_client import SERVICE_REQUIREMENT, assert_memory_matches_delivery
-from rightsrelay.acp_provider import apply_limited_grant
+from rightsrelay.acp_provider import apply_limited_grant, limited_deliverable
 from rightsrelay.memory import AuthorizationMemory
 
 
@@ -26,12 +26,18 @@ def main() -> int:
                 if not (authorization.status == "CLEARED_LIMITED" and authorization.acp_job_id == job_id):
                     raise ValueError("memory belongs to another review or paid grant")
             result = {"ok": True}
-        elif mode in {"apply", "verify"}:
+        elif mode in {"apply", "delivery", "verify"}:
             job_id = str(request["job_id"])
             if not job_id.isascii() or not job_id.isdigit() or int(job_id) <= 0:
                 raise ValueError("invalid onchain job ID")
             if mode == "apply":
                 result = apply_limited_grant(memory_path=database, acp_job_id=job_id)
+            elif mode == "delivery":
+                authorization = AuthorizationMemory(database).get_authorization()
+                if (authorization.status != "CLEARED_LIMITED"
+                        or authorization.acp_job_id != job_id):
+                    raise ValueError("memory does not contain this completed review")
+                result = limited_deliverable(authorization)
             else:
                 assert_memory_matches_delivery(
                     memory_path=database, job_id=int(job_id), deliverable=request["deliverable"],

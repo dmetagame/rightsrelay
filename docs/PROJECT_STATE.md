@@ -3,9 +3,17 @@
 > Living handoff for Codex sessions. Read this file before working. Do not put
 > secrets or raw credential-bearing values here.
 
-Last updated: `2026-09-10T08:56:03Z`
-Status: `ACP_LIVE_JOB_COMPLETED`
-Active objective: Preserve and film the verified RightsRelay evidence. Real Virtuals ACP job 78052 completed on Base mainnet; transactions are disabled again. Core, x402, and ACP source remain unchanged.
+Last updated: `2026-09-10T09:58:49Z`
+Status: `ACP_LIVE_JOB_COMPLETED_AND_FALLBACK_FIXED`
+Active objective: Record and submit the verified RightsRelay demo. Real Virtuals ACP job 78052 completed on Base mainnet, and the observed missing-deliverable behavior now has a fail-closed on-chain hash fallback. Transactions remain disabled.
+
+## ACP Delivery Fallback Checkpoint
+
+- The live run made the approved regression seam red: after provider submission, Virtuals `getJob` returned SUBMITTED without its posted delivery, so the buyer correctly refused evaluation.
+- Added `acp/delivery.ts`, which accepts only one decoded `JobSubmitted` event matching the exact job ID, registered reviewer, and keccak256 of the structured delivery. Missing, duplicate, wrong-job, wrong-reviewer, and wrong-hash evidence fail closed. Its known-good fixture is job 78052's real on-chain delivery hash rather than a value recomputed by the test.
+- Added read-only `acp_bridge delivery` mode. It returns the deterministic deliverable only when the existing Sibyl entity is already `CLEARED_LIMITED` for that exact job ID; unlike provider `apply`, it cannot create or mutate the grant.
+- The existing buyer SUBMITTED branch still prefers the API delivery. Only when absent does it obtain the read-only Sibyl delivery, query a fixed Base block window for the on-chain event, verify the evidence, rerun the existing memory-delivery comparison, and call the unchanged completion lifecycle.
+- TDD evidence: delivery verifier test failed on the missing module then passed; bridge test failed on the missing mode then passed. Final verification: Python 29 passed/2 explicit funded skips; TypeScript check passed; Node 9 passed. No funded integration rerun, ACP transaction, `.env` change, or second job occurred.
 
 ## Live ACP Completion
 
@@ -321,9 +329,9 @@ Checkpoint above supersedes their turn-specific scope and ACP configuration.
    execution disabled and do not spend remaining funds without new approval.
 2. For the final take, either use the local reviewer and separately show job
    78052, or obtain new approval before creating another paid live job.
-3. Treat the missing off-chain deliverable as an SDK/API compatibility issue.
-   The existing buyer fails closed; any permanent hash-verification fallback
-   requires focused regression tests before changing the frozen ACP adapter.
+3. Preserve the tested on-chain hash fallback for the observed SDK/API
+   compatibility issue. Any further ACP lifecycle change requires a new red
+   regression and explicit scope.
 4. Ask hackathon organizers to confirm that the completed Base mainnet job and
    disclosed self-evaluation count for the Virtuals multiplier. Rehearse the
    separately verified Base Sepolia x402 rights-purchase path.
@@ -341,6 +349,7 @@ Checkpoint above supersedes their turn-specific scope and ACP configuration.
 
 | Timestamp | Session/agent | Event | Result |
 | --- | --- | --- | --- |
+| 2026-09-10T09:58:49Z | Codex | Fixed the live ACP delivery-retrieval regression | TDD fallback verifies exact job/reviewer/on-chain hash against read-only Sibyl delivery; 29 Python passed/2 funded skips, TypeScript passed, 9 Node passed; no transaction |
 | 2026-09-10T08:50:29Z | Codex | Completed the authorized live Virtuals ACP job | Real job 78052 completed on Base mainnet; 0.01 USDC escrow; Sibyl CLEARED_LIMITED; on-chain delivery hash verified; no duplicate or extra funds; transactions disabled again |
 | 2026-09-10T08:26:20Z | Codex | Verified ACP wallet funding | Buyer and reviewer each held 0.02 Base mainnet USDC; signer-authenticated job lists empty; no spend |
 | 2026-09-10T08:17:51Z | Codex | Completed real read-only ACP preflight | Both SDK signers authenticated; rights_review fixed 0.01 USDC; no active jobs; both mainnet wallets 0 ETH/USDC. No payment; funding and cost approval required |

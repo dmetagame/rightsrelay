@@ -35,6 +35,14 @@ def test_acp_provider_updates_the_shared_entity_and_a_fresh_process_recalls_it(
         acp_job_id="8472",
     )
 
+    bridge = subprocess.run(
+        [sys.executable, "-m", "rightsrelay.acp_bridge", "delivery", str(database)],
+        input=json.dumps({"job_id": "8472"}),
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+
     recalled = subprocess.run(
         [
             sys.executable,
@@ -65,6 +73,7 @@ def test_acp_provider_updates_the_shared_entity_and_a_fresh_process_recalls_it(
         "territories": ["UK"],
         "expires_on": "2026-09-30",
     }
+    assert json.loads(bridge.stdout) == deliverable
     assert body["status"] == "CLEARED_LIMITED"
     assert body["channels"] == ["youtube"]
     assert body["paid"] is False

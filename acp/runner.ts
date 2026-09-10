@@ -5,7 +5,8 @@ import { base } from "@account-kit/infra";
 import {
   AcpAgent, AssetToken, JobSession, JobStatus, PrivyAlchemyEvmProviderAdapter,
 } from "@virtuals-protocol/acp-node-v2";
-import { getAddress, zeroAddress } from "viem";
+import { createPublicClient, getAddress, http, parseAbiItem, zeroAddress } from "viem";
+import { assertSubmittedDelivery } from "./delivery.js";
 import { createKeystoreSigner } from "./signer.js";
 import { RIGHTS_REVIEW_OFFERING as offeringName, OfferingError, selectRightsReviewOffering } from "./offering.js";
 
@@ -115,6 +116,25 @@ async function main(): Promise<void> {
       }
       return true;
     }
+    async function recoverSubmittedDelivery(id: string): Promise<string> {
+      const expected = memory("delivery", { job_id: id });
+      const serialized = JSON.stringify(expected);
+      const rpc = createPublicClient({
+        chain: base,
+        transport: http(base.rpcUrls.default.http[0], { timeout: 15000, retryCount: 2 }),
+      });
+      const head = await rpc.getBlockNumber();
+      const logs = await rpc.getLogs({
+        address: getAddress(contract),
+        event: parseAbiItem(
+          "event JobSubmitted(uint256 indexed jobId, address indexed provider, bytes32 deliverable)",
+        ),
+        args: { jobId: BigInt(id) },
+        fromBlock: head > 1999n ? head - 1999n : 0n,
+        toBlock: head,
+      });
+      return assertSubmittedDelivery(BigInt(id), sellerAddress, serialized, logs);
+    }
 
     if (role === "provider") {
       progress(`Provider ready; pid ${process.pid}; shared Sibyl entity only`);
@@ -173,8 +193,9 @@ async function main(): Promise<void> {
         funded = true;
         progress(`Job ${id}: ${offering.priceValue} USDC escrow funded`);
       } else if (job.status === JobStatus.SUBMITTED && !evaluated) {
-        if (!session.job!.deliverable) { await delay(poll); continue; }
-        const deliverable = JSON.parse(session.job!.deliverable ?? "null");
+        const serialized = session.job!.deliverable ?? await recoverSubmittedDelivery(id);
+        if (!session.job!.deliverable) progress(`Job ${id}: API delivery missing; onchain hash verified`);
+        const deliverable = JSON.parse(serialized);
         memory("verify", { job_id: id, deliverable });
         await session.complete("Self-evaluation: delivery equals the persisted Sibyl authorization");
         evaluated = true;

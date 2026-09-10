@@ -75,7 +75,10 @@ export path has no authorization input and cannot function.
   run, the Virtuals job API omitted the posted deliverable from `getJob`; the
   buyer failed closed, then completed the same job only after the on-chain
   `JobSubmitted` hash was independently matched to the structured Sibyl JSON.
-  No duplicate job or extra-fund request was used. The adapter is pinned to
+  No duplicate job or extra-fund request was used. The adapter now contains a
+  regression-tested fallback for that API omission: it accepts only one
+  `JobSubmitted` event matching the exact job, reviewer, and Sibyl-derived
+  delivery hash before evaluation. The adapter is pinned to
   `@virtuals-protocol/acp-node-v2@0.1.12`, and both signers use `ACP_ONLY`
   approval.
 
@@ -162,6 +165,10 @@ x402 keys. Use limited wallet policies.
 The buyer uses `createJobFromOffering`; the provider calls `setBudget`, waits
 for onchain funding, calls the existing `apply_limited_grant`, and `submit`s
 JSON. The buyer checks memory before `complete` and confirms onchain completion.
+If the Virtuals job API omits the submitted JSON, the buyer reads the expected
+delivery from the already-reviewed Sibyl entity and requires exactly one
+matching on-chain `JobSubmitted` hash before the same memory check. Missing,
+duplicate, or mismatched evidence fails closed.
 Only structured requirement messages are passed to Python—never chat history.
 Replayed delivery reuses the same authorization version. Existing grants are
 not overwritten by a different review. One provider process per shared DB is
