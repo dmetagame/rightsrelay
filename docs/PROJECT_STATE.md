@@ -3,9 +3,20 @@
 > Living handoff for Codex sessions. Read this file before working. Do not put
 > secrets or raw credential-bearing values here.
 
-Last updated: `2026-09-10T13:36:59Z`
-Status: `PUBLIC_SITE_CUSTOM_DOMAIN_LIVE`
-Active objective: The credential-free RightsRelay submission site is live at `https://rightsrelay.rouma.online/` with enforced HTTPS. Deployment is complete; the frozen product core and partner lifecycles remain unchanged.
+Last updated: `2026-09-10T14:23:33Z`
+Status: `AUDIT_COMPLETE_OPEN_FINDINGS`
+Active objective: Full audit completed and documented in `docs/AUDIT_2026-09-10.md`. The public site remains live. Prioritize confirmed completion, console, and authorization-boundary findings before recording; no application repair or funded transaction was performed by this audit.
+
+## Full Audit — September 10
+
+- Audited clean `/home/rouma/rightsrelay`, `main` tracking `origin/main`, application HEAD `f27448ae54705c6d98cf2e77ed868cce112890f3`; published site source `23d2f9fd39700244a561b99b482c6f41e99c7539` on `gh-pages`. GitHub authentication and remote refs verified. All earlier readiness assertions must be read alongside this audit.
+- Added `docs/AUDIT_2026-09-10.md`: 12 prioritized findings plus lower-priority observations, reproduction evidence, verification scope, and rubric implications. Product source, frozen files, dependencies, runtime data, credentials, and deployed site were not changed.
+- High-priority findings: the ACP COMPLETED branch still requires an API deliverable after its SUBMITTED fallback; console action endpoints accept unauthenticated unrelated-Origin POSTs; console status can show CLEARED after deleting the authorization and can show an old packet for a blocked attempt.
+- Other confirmed issues include destructive repeat initialization, acceptance/export of empty territories, payment invoked before checking memory, missing signed-grant/REFERENCE evidence, buffered/blocking console progress, an unenforced mainnet/test-facilitator prohibition, contradictory ACP labels, absent test CI/Python resolution lock, and overbroad scope combinations in the narrower offline grant path. See the report for precise scope and severity; these are not all failures of the fixed happy path.
+- Verification: Python 29 passed/2 intentionally funded skips (13.65s), TypeScript passed, 9 Node tests passed, 94 installed packages compatible. PyPI metadata for all 93 installed external distributions reported no advisories; npm reported 16 low/5 moderate affected entries, no high/critical. These checks do not establish full absence of vulnerabilities.
+- New isolated rehearsal: SIGTERM PID 135405, new PID 135433, recalled CLEARED_LIMITED; paid IG US+UK BLOCKED/no packet, explicit offline apply-grant, identical attempt CLEARED/packet. Temporary databases/processes cleaned. No ACP job, wallet signature, payment, or live-memory mutation.
+- Public HTTPS page/CSS/favicon returned 200; public status/env/SQLite probes returned 404. Site HTML and shell syntax passed. Tracked/reachable-history credential-marker scan found no matches; ignored `.env` remains untracked mode 0600. No final video/post URLs or submission-ready receipt verified.
+- Next: present the findings for scoped repairs, beginning with F01–F03; preserve historical paid evidence and disabled spending. This audit does not assert an automatic hackathon pass or guaranteed multiplier.
 
 ## Public Site Deployment
 
@@ -363,6 +374,7 @@ Checkpoint above supersedes their turn-specific scope and ACP configuration.
 
 | Timestamp | Session/agent | Event | Result |
 | --- | --- | --- | --- |
+| 2026-09-10T14:23:33Z | Codex | Completed full RightsRelay audit | Report records 12 findings; 29 Python passed/2 funded skips, 9 Node passed, real restart rehearsal passed; reproduced false-green/missing-memory, stale-packet, empty-territory, reset, and Origin-boundary failures; no product changes or spending |
 | 2026-09-10T13:36:59Z | Codex | Activated and verified the custom domain | Authoritative DNS correct; Pages run 34483525169 passed; `rightsrelay.rouma.online` returned 200 over enforced HTTPS; repository homepage updated |
 | 2026-09-10T13:27:30Z | Codex | Published and verified the public submission site | Native `gh-pages` deployment run 34482603157 passed; HTTPS page returned 200 with expected evidence; custom domain awaits Namecheap CNAME |
 | 2026-09-10T13:24:05Z | Codex | Built and audited the credential-free public microsite | Static GitHub Pages site ready; HTML validation clean, 94 AccessLint rules zero violations, mobile keyboard/reflow check passed; 29 Python passed/2 funded skips, TypeScript passed, 9 Node passed |
