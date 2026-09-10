@@ -3,12 +3,13 @@
 > Living handoff for Codex sessions. Read this file before working. Do not put
 > secrets or raw credential-bearing values here.
 
-Last updated: `2026-09-10T19:45:18Z`
-Status: `HIGH_PRIORITY_AUDIT_REPAIRS_VERIFIED_PENDING_PUBLICATION`
-Active objective: Publish the verified F01–F03 repairs; the nine medium-priority audit findings remain open. No funded transaction is required or authorized for this checkpoint.
+Last updated: `2026-09-10T19:47:05Z`
+Status: `HIGH_PRIORITY_AUDIT_REPAIRS_PUBLISHED`
+Active objective: F01–F03 repairs are implemented, verified, and published; hand off the remaining nine medium-priority audit findings for follow-up. No funded transaction is required or authorized for this checkpoint.
 
 ## High-priority repair scope
 
+- Publication receipt, `2026-09-10T19:47:05Z`: implementation commit `e66cc8a305464df020bb74986fc37e8482da6c98` pushed successfully to `origin/main`; `git ls-remote origin refs/heads/main` matched local HEAD exactly and the worktree was clean before this state-only receipt. Repository `/home/rouma/rightsrelay`, active branch `main`, upstream `origin/main`. Final Node rerun: 13 passed, 0 skipped; TypeScript and shell syntax passed. Staged hygiene check covered 18 scoped files with no new key-shaped material/credential markers; `.env` remains untracked and ignored mode 0600.
 - Started from clean published `5c1ed52bf9e5345e3808fd8fb1c0de62df35571f` on `main`, with GitHub authentication and `origin/main` verified. The user explicitly authorized fixes starting with F01–F03.
 - TDD seams are the audited completion transition (including missing delivery/restart), console HTTP action boundary, status projection, and browser loss-of-connection behavior. These follow the requested repairs and existing test interfaces; frozen gate/models and x402 flows remain outside this checkpoint.
 - F01: `acp/review_completion.ts` and `runner.ts` reuse verified recovery for SUBMITTED and COMPLETED; both recheck current memory and COMPLETED never evaluates again. `delivery.ts` accepts an optional verified `RIGHTSRELAY_ACP_SUBMISSION_BLOCK` for bounded historical recovery, forwarded through the existing client environment. New lifecycle/fresh-worker/evidence tests pass; existing SDK lifecycle and exact job/provider/hash checks are retained.
@@ -17,7 +18,7 @@ Active objective: Publish the verified F01–F03 repairs; the nine medium-priori
 - Regression-first evidence: original missing completion helper, cross-origin mutation, stale CLEARED after deletion/forged journal, browser stale green, and malformed token handling were observed red before fixes. Full Python suite: 37 passed, 2 funded skips, one upstream websockets deprecation warning (17.09s); TypeScript passes; Node 13 passed. Funded wallet variables/live-test opt-ins withheld and ACP transactions disabled.
 - Real HTTP rehearsal: PID 245848 terminated by SIGTERM; PID 245888 recalled CLEARED_LIMITED. Unauthorized/foreign-origin/old-token actions returned 403; paid attempt BLOCKED/no packet, explicit offline apply-grant, identical attempt CLEARED/current packet at `release-packets/campaign-aurora-neon-drive.json`. Deleting the temporary authorization returned BLOCKED and marked the retained packet historical. All temporary processes/database/packet artifacts were cleaned; no live data or wallet operation occurred.
 - Updated README, `.env.example`, audit remediation summary, and shot list for historical recovery, local token/reload rules, empty-memory BLOCKED, and disconnected UNVERIFIED. Frozen gate/models/x402 and public site source are unchanged. `.env` stays ignored, untracked, mode 0600; no credentials added to tracked files.
-- Next: inspect/stage only this repair, commit and push main, verify remote SHA, record publication receipt. F04–F12 require their own scoped follow-up; do not claim a full clean audit or run another funded job automatically.
+- Next: use the repaired local console and reload after each launcher restart. Follow up F04–F12 in audit priority order, beginning with repeat-initialization data loss, empty-territory validation, and purchase preflight/idempotency. No repair in this checkpoint required a paid rerun or static-site redeployment; do not claim a full clean audit or run another funded job automatically.
 
 ## Full Audit — September 10
 
