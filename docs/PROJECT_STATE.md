@@ -3,9 +3,23 @@
 > Living handoff for Codex sessions. Read this file before working. Do not put
 > secrets or raw credential-bearing values here.
 
-Last updated: `2026-09-10T19:47:05Z`
-Status: `HIGH_PRIORITY_AUDIT_REPAIRS_PUBLISHED`
-Active objective: F01–F03 repairs are implemented, verified, and published; hand off the remaining nine medium-priority audit findings for follow-up. No funded transaction is required or authorized for this checkpoint.
+Last updated: `2026-09-10T21:20:00Z`
+Status: `DEMO_VIDEO_RENDERED_AND_VERIFIED`
+Active objective: Hand off the completed demo video for human review/upload. The product repository remains at the published high-priority repair checkpoint; no further funded action is authorized automatically.
+
+## Demo video recording
+
+- Started from clean published `0e2ba3d3ed119f5a53f7df76b44ff498826d7c46` on `main`, tracking matching `origin/main`; GitHub authentication and public origin verified. Recording uses an isolated temporary worktree/database so existing local memory and packets remain untouched.
+- The user asked Codex to make the video immediately after being told the take would execute one `$0.001` Base Sepolia test-USDC x402 purchase. Buyer credentials and seller pay-to are configured only in ignored `.env`; network preflight returned chain ID 84532. No private key was printed or copied.
+- Recording format decision: one continuous Xvfb/FFmpeg screen capture with the real console and operator terminal visible side-by-side. It shows the actual SIGTERM/restart and x402 output. Remotion video guidance informed safe-area/readability decisions; no montage or reconstructed transaction replaced the judging evidence.
+- ACP job 78052 was already real and completed on Base mainnet. This take used the local reviewer path and labels that honestly on screen; no second paid ACP job was created.
+- Completed one continuous 1920x1080, 30fps Xvfb/FFmpeg product take. It captured initial missing-memory BLOCKED, PENDING initialization, local CLEARED_LIMITED review, actual SIGTERM, fresh launcher recall, paid Instagram US+UK BLOCKED/no packet, a real `$0.001` Base Sepolia x402 purchase, and the identical request CLEARED/current packet. Initial PID 257722 changed to 259299. Existing local database/packet were not used.
+- The facilitator returned transaction `0x6287…6be`; Base Sepolia JSON-RPC confirmed receipt status 1 at block 46651520 with two logs. The video and terminal show the complete public transaction identifier; no private key or environment dump appears. ACP remains truthfully labeled as prior completed Base mainnet job 78052 and local reviewer in this take.
+- Artifacts outside Git: `/home/rouma/RightsRelay-demo-2026-09-10.mp4` is the untouched 1:58.567 continuous capture. `/home/rouma/RightsRelay-demo-final.mp4` is the recommended 2:03.567 H.264/AAC submission copy: the visual sequence is uncut, with only a five-second final proof-frame hold and timed synthetic narration added. Preserve the raw take for provenance and disclose the final hold if strict unedited-source evidence is requested.
+- Media verification: final video 1920x1080, yuv420p, H.264 at 30fps plus mono AAC; 6,600,253 bytes; full decode completed without errors; narration measured mean -15.8 dB and peak -1.5 dB. Contact-sheet review showed PENDING, CLEARED_LIMITED, process restart, BLOCKED, real x402 settlement, CLEARED, and packet evidence in sequence.
+- Remotion skill guidance affected the safe-area/readability and final-render checks, while the hackathon evidence rule led to a real continuous desktop capture instead of a composited protocol reenactment. No Remotion application was added to the product repository.
+- Cleanup removed only the isolated recording worktree/database/packet, generated narration fragments, temporary X11 tooling, process logs, and the redundant silent padded intermediate. The raw and final MP4 artifacts remain in `/home/rouma`; no recording process or local server remains running.
+- Next: human watches `/home/rouma/RightsRelay-demo-final.mp4` once with sound, uploads it to the hackathon host, and records the public video/submission URL here. Do not rerun either paid integration merely to change styling.
 
 ## High-priority repair scope
 
