@@ -15,6 +15,7 @@ Active objective: Publish the credential-free RightsRelay submission microsite t
 - Validation so far: `html-validate` passes; AccessLint 0.21.0 scanned 94 rules with zero violations after fixing one contrast issue and a nested landmark. A compact mobile check found no horizontal overflow, one H1, native-link interaction only, and visible 3px focus indicators under real Tab-key events. Human screen-reader announcement testing remains outside this automated audit.
 - Existing verification remains green: Python `29 passed, 2 skipped` (only opt-in funded ACP/x402 integrations), TypeScript check passed, and all 9 Node tests passed. Frozen core/partner paths have no diff. A broad 64-hex scan found only the intentional public on-chain delivery-hash fixture in `acp/tests/delivery.test.ts`, not credential material.
 - GitHub Pages is not yet enabled. Planned default URL is `https://dmetagame.github.io/rightsrelay/`; custom-domain configuration must wait for the human's Namecheap CNAME to resolve.
+- The first push was rejected because the current GitHub OAuth token lacks `workflow` scope. Removed the unneeded Actions workflow and selected GitHub Pages' native `gh-pages` branch source instead; this avoids expanding token authority. Commit `04946a5` remains local-only until its follow-up removal commit is safely pushed.
 
 ## ACP Delivery Fallback Checkpoint
 
