@@ -9,6 +9,7 @@ Active objective: Full audit completed and documented in `docs/AUDIT_2026-09-10.
 
 ## Full Audit — September 10
 
+- Audit report checkpoint `0073a45e6c8f502d056c2d8633be3f21260666d6` was pushed to `origin/main`; `git ls-remote` matched the local SHA and the worktree was clean before this receipt. Only audit documentation changed.
 - Audited clean `/home/rouma/rightsrelay`, `main` tracking `origin/main`, application HEAD `f27448ae54705c6d98cf2e77ed868cce112890f3`; published site source `23d2f9fd39700244a561b99b482c6f41e99c7539` on `gh-pages`. GitHub authentication and remote refs verified. All earlier readiness assertions must be read alongside this audit.
 - Added `docs/AUDIT_2026-09-10.md`: 12 prioritized findings plus lower-priority observations, reproduction evidence, verification scope, and rubric implications. Product source, frozen files, dependencies, runtime data, credentials, and deployed site were not changed.
 - High-priority findings: the ACP COMPLETED branch still requires an API deliverable after its SUBMITTED fallback; console action endpoints accept unauthenticated unrelated-Origin POSTs; console status can show CLEARED after deleting the authorization and can show an old packet for a blocked attempt.
