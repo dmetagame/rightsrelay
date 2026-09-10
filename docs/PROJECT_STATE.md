@@ -3,12 +3,13 @@
 > Living handoff for Codex sessions. Read this file before working. Do not put
 > secrets or raw credential-bearing values here.
 
-Last updated: `2026-09-10T08:50:29Z`
+Last updated: `2026-09-10T08:56:03Z`
 Status: `ACP_LIVE_JOB_COMPLETED`
 Active objective: Preserve and film the verified RightsRelay evidence. Real Virtuals ACP job 78052 completed on Base mainnet; transactions are disabled again. Core, x402, and ACP source remain unchanged.
 
 ## Live ACP Completion
 
+- Published evidence checkpoint `3c86c917775caef13caa363b6b28c5ba94dc6c72` reached `origin/main`; README and shot list now identify real job 78052 and disclose the delivery-retrieval limitation.
 - The human explicitly approved one `rights_review` job capped at exactly 0.01 USDC. The cap and transaction opt-in were exported only into the two live process environments; ignored `.env` remained disabled with an empty cap.
 - A fresh ignored Sibyl database initialized `campaign-aurora:neon-drive` as PENDING. Separate buyer and reviewer processes created job 78052, negotiated the registered 0.01 USDC fare, funded escrow, updated the shared WARM entity, and submitted the structured delivery. Sibyl now persists version 2, `CLEARED_LIMITED`, actor `reviewer.acp`, and real `acp_job_id=78052`; COLD history records the review.
 - The installed SDK posted the delivery before its on-chain submit, but the current Virtuals `getJob` response omitted the delivery. The normal buyer process failed closed without evaluating. Re-posting through the SDK's official API still was not returned.
