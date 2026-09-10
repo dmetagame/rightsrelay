@@ -3,11 +3,26 @@
 > Living handoff for Codex sessions. Read this file before working. Do not put
 > secrets or raw credential-bearing values here.
 
-Last updated: `2026-09-09T20:08:00Z`
-Status: `ACP_SIGNER_COMPATIBILITY_AWAITING_TEST_BOUNDARY_CONFIRMATION`
-Active objective: User approved only connecting the official locally stored signers and matching the registered rights_review offering. Keep the core, x402, and ACP lifecycle frozen; mainnet spending remains unapproved and disabled.
+Last updated: `2026-09-10T00:27:01Z`
+Status: `ACP_SIGNER_COMPATIBILITY_COMPLETE_OFFLINE_VERIFIED`
+Active objective: Approved signer callback and exact rights_review matching are complete and locally verified. Next milestone is a separately approved/funded real ACP job. Core, x402, and ACP lifecycle are unchanged; mainnet spending remains disabled.
 
-## Approved Compatibility Follow-up
+## Current Completed Checkpoint
+
+- Started from clean published `fe29a0937473bf06775cb0393f3498797905eb15`, main tracking origin/main. User confirmed the new test boundaries before implementation. The following older sections are historical; this section is authoritative.
+- `acp/signer.ts` implements the official CLI 1.0.35 executable protocol via SDK 0.1.12 `signFn`. It requires an absolute executable path and a canonical P256 public key, invokes without a shell, forwards only keystore runtime variables, verifies every returned signature against the selected public key, and sanitizes errors without raw output or causes. No private-key export or new dependency.
+- `acp/runner.ts` now passes the role's public selector to that callback; Python provider configuration and its launcher use the same public-selector/binary configuration. The earlier Python client preparation is now fully connected. Existing transaction opt-in, fee cap, escrow lifecycle, memory checks, and role-specific selector filtering remain intact.
+- `acp/offering.ts` selects exactly one `rights_review` service. The old display label and duplicates fail closed; existing fixed-fare/no-subscriptions/no-extra-funds/valid-SLA/cap checks are preserved. No remote offering was renamed or changed.
+- Ignored local `.env` has both already approved public selectors and the existing official executable path. Removed obsolete empty raw-ACP-key slots and unused offering-name override; did not modify x402 keys. `.env` remains 0600, ignored, untracked. Transaction flag remains 0 and cap empty. The executable currently lives in the npm execution cache; restore/reconfigure its path if that cache is cleared.
+- Real offline proof on September 10: the actual new callback signed a fixed harmless challenge with each existing local signer; Node crypto independently verified both results. Only success booleans were printed. No network authentication, ACP job, settlement, or payment was performed by this proof.
+- TDD: new signer success tracer red then green; wrong-role/malformed/error-output rejection red then green; invalid configuration rejection red then green; provider entrypoint public-config/missing-memory tracer red then green; exact offering selection tracer red then green. Added regression coverage for existing fare restrictions. External signer-process doubles are offline tests only, never live-job evidence.
+- Verification: Python suite 29 passed/2 funded-integration skips; TypeScript check passed; Node suite 8 passed. Initial sandboxed Node subprocess tests returned EPERM; the approved outside-sandbox rerun passed all 8 without wallet credentials or transactions. Shell syntax and diff hygiene passed. Tracked/new source secret scans returned no key/hash matches.
+- Updated `.env.example`, README signer instructions/partner honesty, and shot-list prerequisites. Exact citations remain memory.py:36 write/:47 read, acp_provider.py:27 read/:49 write, acp_client.py:65 verification. No diff in gate.py, models.py, memory.py, x402 adapters, console design, or ACP lifecycle calls.
+- Next: inspect current live fee/funding and active jobs read-only, disclose residual dependency advisory risk and any gas/platform costs, then obtain explicit spending approval before enabling a cap or transaction flag. No real ACP job ID exists or is claimed; do not claim the Virtuals multiplier yet.
+
+## Earlier Compatibility Follow-up (historical)
+
+- Latest user approval confirms signer-callback and exact registered-offering test boundaries. Resume from clean published `fe29a0937473bf06775cb0393f3498797905eb15` on main. No further test-boundary approval is needed for these two fixes; transactions remain disabled.
 
 - Starting clean `main` / `origin/main`: `aaa20b416e1007bf404483029fbb86f8a7f63f10`; GitHub authentication verified. Previous signer verification handoff is published. No secret-bearing configuration is tracked.
 - Confirmed installed SDK 0.1.12 supports `signFn(payload: Uint8Array): Promise<string>`; official CLI 1.0.35 delegates to its local signer binary with `sign --public-key ... --payload <hex>` and consumes a JSON `signature`. No private-key export or new protocol is needed.
@@ -273,11 +288,9 @@ Checkpoint above supersedes their turn-specific scope and ACP configuration.
 
 ## Next Actions
 
-1. Both restricted signers are authorized in the official CLI's local storage.
-   Obtain approval for the two frozen-adapter compatibility corrections:
-   supported keystore signing callback and exact `rights_review` offering name.
-   Keep keys local; do not require raw private-key export into `.env`.
-2. Verify the live registered `Rights review` offering and required schemas;
+1. Both restricted signers are authorized and the two approved compatibility
+   fixes are complete. Keep keys in the local CLI keystore, never chat or Git.
+2. Recheck the live registered `rights_review` offering and required schemas;
    review residual dependency advisories and wallet policies. Quote the actual
    job fare and any gas/platform costs, then obtain separate spending approval.
 3. After approval/funding only, set the approved USDC cap and transaction flag,
@@ -299,6 +312,7 @@ Checkpoint above supersedes their turn-specific scope and ACP configuration.
 
 | Timestamp | Session/agent | Event | Result |
 | --- | --- | --- | --- |
+| 2026-09-10T00:27:01Z | Codex | Completed both approved ACP compatibility fixes | Actual callback verified with both local signers; 29 Python passed/2 funded skips, 8 Node passed; no core/x402/lifecycle changes or transactions |
 | 2026-09-09T20:08:00Z | Codex | Verified official local signer protocol and prepared Python config | Both real offline signatures verified; public-config/memory-refusal tracer red then green; 28 passed/2 skipped. Remaining adapter work awaits TDD test-boundary confirmation; no spending |
 | 2026-09-09T20:00:30Z | Codex | Confirmed both signer approvals and policies | Both completed and ACP_ONLY; 27 offline tests passed, 2 funded integrations skipped. No funds spent; callback/name adapter corrections await scoped approval |
 | 2026-09-09T19:25:45Z | Codex | Completed official CLI authentication and read-only registry verification | Both existing wallet identities match; real offering is `rights_review`, 0.01 USDC. Recorded frozen adapter name mismatch; signer browser approvals next, spending still disabled |

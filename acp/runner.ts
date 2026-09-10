@@ -4,9 +4,10 @@ import { setTimeout as delay } from "node:timers/promises";
 import { base } from "@account-kit/infra";
 import {
   AcpAgent, AssetToken, JobSession, JobStatus, PrivyAlchemyEvmProviderAdapter,
-  type AcpAgentOffering,
 } from "@virtuals-protocol/acp-node-v2";
 import { getAddress, zeroAddress } from "viem";
+import { createKeystoreSigner } from "./signer.js";
+import { RIGHTS_REVIEW_OFFERING as offeringName, OfferingError, selectRightsReviewOffering } from "./offering.js";
 
 // Do not forward raw SDK logging: errors may contain signing requests or tokens.
 console.log = () => {};
@@ -16,7 +17,6 @@ const emit = (data: object) => process.stdout.write(JSON.stringify(data) + "\n")
 const progress = (stage: string) => emit({ type: "progress", stage });
 class RelayError extends Error {}
 function fail(message: string): never { throw new RelayError(message); }
-const offeringName = "Rights review";
 const chainId = 8453;
 
 function env(name: string): string {
@@ -40,20 +40,6 @@ function memory(mode: string, request: object = {}): any {
 function validId(id: string): void {
   if (!/^[1-9][0-9]*$/.test(id)) fail("Invalid onchain job ID");
 }
-function validateOffering(offerings: AcpAgentOffering[], cap: bigint): AcpAgentOffering {
-  const matches = offerings.filter(o => o.name === offeringName);
-  if (matches.length !== 1) fail("Exactly one registered Rights review offering is required");
-  const offering = matches[0];
-  // No subscriptions, percentage fares, or extra funds are in this product.
-  if (offering.requiredFunds || offering.subscriptions?.length || offering.priceType.toLowerCase() !== "fixed") {
-    fail("Offering must be fixed-price without extra funds or subscriptions");
-  }
-  if (!Number.isFinite(offering.priceValue) || offering.priceValue <= 0 ||
-      AssetToken.usdc(offering.priceValue, chainId).rawAmount > cap) fail("Offering exceeds approved USDC cap");
-  if (!Number.isFinite(offering.slaMinutes) || offering.slaMinutes <= 0) fail("Invalid offering SLA");
-  return offering;
-}
-
 async function main(): Promise<void> {
   // This guard precedes SDK initialization, authentication, and any transaction.
   if (process.env.RIGHTSRELAY_ACP_ALLOW_TRANSACTIONS !== "1") fail("ACP mainnet transactions are disabled");
@@ -72,7 +58,7 @@ async function main(): Promise<void> {
   const provider = await PrivyAlchemyEvmProviderAdapter.create({
     walletAddress: role === "buyer" ? buyerAddress : sellerAddress,
     walletId: env(`${prefix}_WALLET_ID`),
-    signerPrivateKey: env(`${prefix}_SIGNER_PRIVATE_KEY`),
+    signFn: createKeystoreSigner(env("RIGHTSRELAY_ACP_SIGNER_BINARY"), env(`${prefix}_SIGNER_PUBLIC_KEY`)),
     chains: [base],
   });
   const agent = await AcpAgent.create({ evmProvider: provider });
@@ -89,9 +75,9 @@ async function main(): Promise<void> {
   try {
     const seller = await agent.getAgentByWalletAddress(sellerAddress);
     if (!seller || getAddress(seller.walletAddress) !== sellerAddress) fail("Reviewer registration not found");
-    const offering = validateOffering(seller.offerings, cap);
+    const offering = selectRightsReviewOffering(seller.offerings, cap);
     const fare = AssetToken.usdc(offering.priceValue, chainId);
-    progress(`Registered Rights review price: ${offering.priceValue} USDC; cap: ${capValue} USDC (gas separate)`);
+    progress(`Registered ${offeringName} price: ${offering.priceValue} USDC; cap: ${capValue} USDC (gas separate)`);
     // SDK hydration is read-only. No automatic handler can spend on unrelated jobs.
     await agent.start();
 
@@ -211,6 +197,6 @@ async function main(): Promise<void> {
 }
 
 main().catch(error => {
-  emit({ type: "progress", stage: error instanceof RelayError ? error.message : "ACP SDK operation failed (sensitive details withheld)" });
+  emit({ type: "progress", stage: error instanceof RelayError || error instanceof OfferingError ? error.message : "ACP SDK operation failed (sensitive details withheld)" });
   process.exitCode = 2;
 });

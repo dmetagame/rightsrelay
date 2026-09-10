@@ -70,8 +70,10 @@ export path has no authorization input and cannot function.
 - **Virtuals ACP — mainnet compatibility adapter implemented; live job pending.**
   The adapter is pinned to `@virtuals-protocol/acp-node-v2@0.1.12` for EconomyOS
   wallet IDs and Privy signers on Base mainnet (8453). Offline checks do not prove
-  settlement: no real ACP job ID exists yet. Signer authorization, registration
-  verification, and separate spending approval remain required. Do not claim
+  settlement: no real ACP job ID exists yet. Both agents and the registered
+  `rights_review` offering were verified, and both local signers have verified
+  `ACP_ONLY` approval. The callback passed real offline signature checks for
+  both roles; funding and separate spending approval remain required. Do not claim
   Virtuals as an exercised partner stack until a real funded job completes.
 
 ACP review escrow and the later x402 rights purchase are separate events.
@@ -105,21 +107,44 @@ Base Sepolia.
 
 For ACP, keep these values only in the ignored local `.env`. Wallet IDs are
 the alphanumeric EVM wallet IDs shown in EconomyOS, NOT legacy numeric entity
-IDs. Signer keys are separately authorized keys, not the x402 wallet keys:
+IDs. Only public signer selectors are configured here; private ACP keys remain
+in the official CLI's local keystore, not `.env` or the x402 wallet:
 
 ```text
 BUYER_AGENT_WALLET_ADDRESS
 BUYER_WALLET_ID
-BUYER_SIGNER_PRIVATE_KEY
+BUYER_SIGNER_PUBLIC_KEY
 SELLER_AGENT_WALLET_ADDRESS
 SELLER_WALLET_ID
-SELLER_SIGNER_PRIVATE_KEY
+SELLER_SIGNER_PUBLIC_KEY
+RIGHTSRELAY_ACP_SIGNER_BINARY
 ```
 
-Register the `Rights review` offering through
+Authorize each agent's dedicated signer using the
+[official ACP CLI](https://github.com/Virtual-Protocol/acp-cli), pinned for this
+setup to `@virtuals-protocol/acp-cli@1.0.35`. Use `restricted` / `ACP_ONLY`,
+complete the browser approval, and verify `agent signer-policy` for each agent.
+Copy only the returned base64 **public** key into the corresponding selector.
+Set `RIGHTSRELAY_ACP_SIGNER_BINARY` to the absolute executable path of the
+installed package's `bin/acp-cli-signer-linux` (or the matching platform binary).
+Run the provider and buyer as the same OS user that approved these signers.
+If the installation/cache is removed, restore that path before running; a
+missing executable fails closed. No key export or new agent is needed.
+
+`acp/signer.ts` implements the CLI's real
+`sign --public-key <selector> --payload <hex>` protocol through the SDK's
+`signFn` callback. It verifies returned P256 signatures locally and suppresses
+raw subprocess errors. Each role receives only its own public selector; no
+raw ACP or x402 private key is forwarded. Shared OS keystore access is not a
+separate-process security sandbox.
+
+Register the exact `rights_review` offering through
 [Virtuals ACP](https://app.virtuals.io/acp/) before the take. Use fixed pricing,
 no extra funds, no subscriptions, and a structured request with `entity_name`
 and `requested_use` matching `SERVICE_REQUIREMENT` in `acp_client.py`.
+The verified offering is fixed at 0.01 USDC; recheck the live price before
+approving a run. `acp/offering.ts` rejects the old `Rights review` label,
+duplicates, extra funds, subscriptions, and fares above the approved cap.
 Self-evaluation is
 intentional: the client evaluates only after comparing the deliverable with the
 shared Sibyl entity.
@@ -128,8 +153,8 @@ Mainnet transaction execution defaults OFF. After the human has separately
 approved the registered fee and any gas/platform costs, configure
 `RIGHTSRELAY_ACP_MAX_USDC` to the approved job-fee cap and
 `RIGHTSRELAY_ACP_ALLOW_TRANSACTIONS=1`. The cap covers the job fare, not gas.
-Do not set these as part of credential setup alone. Each process receives only
-its own signing key; neither receives x402 keys. Use limited wallet policies.
+Do not set these as part of credential setup alone. Neither process receives
+x402 keys. Use limited wallet policies.
 
 The buyer uses `createJobFromOffering`; the provider calls `setBudget`, waits
 for onchain funding, calls the existing `apply_limited_grant`, and `submit`s

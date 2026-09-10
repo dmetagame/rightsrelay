@@ -1,8 +1,9 @@
 # RightsRelay — 4:00 unedited take
 
 Use one absolute `RIGHTSRELAY_DB` path in every process. Start the x402 seller
-before recording. Start the ACP provider only after its six registration/signer
-variables, explicit mainnet transaction approval, and approved USDC cap are set.
+before recording. Start the ACP provider only after its wallet IDs, public signer
+selectors, official signer-binary path, explicit mainnet transaction approval,
+and approved USDC cap are set. The exact registered service is `rights_review`.
 ACP is Base mainnet; the later x402 purchase remains Base Sepolia. Keep a terminal
 beside the board so the real process kill is visible.
 

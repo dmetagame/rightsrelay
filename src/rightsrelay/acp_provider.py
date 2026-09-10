@@ -12,8 +12,8 @@ from rightsrelay.models import UseAuthorization
 
 ACP_REVIEWER_ACTOR = "reviewer.acp"
 PROVIDER_REQUIRED_ENV = (
-    "SELLER_AGENT_WALLET_ADDRESS", "SELLER_WALLET_ID", "SELLER_SIGNER_PRIVATE_KEY",
-    "BUYER_AGENT_WALLET_ADDRESS",
+    "SELLER_AGENT_WALLET_ADDRESS", "SELLER_WALLET_ID", "SELLER_SIGNER_PUBLIC_KEY",
+    "BUYER_AGENT_WALLET_ADDRESS", "RIGHTSRELAY_ACP_SIGNER_BINARY",
 )
 
 
@@ -91,8 +91,8 @@ def run_provider(*, memory_path: str | Path) -> None:
         raise ACPReviewError(f"ACP PROVIDER CONFIG MISSING: {', '.join(missing)}")
     command = adapter_command("provider", memory_path)
     environment = adapter_environment()
-    # A provider never receives the buyer's signing key.
-    environment.pop("BUYER_SIGNER_PRIVATE_KEY", None)
+    # A provider receives only its own public signer selector, never raw keys.
+    environment.pop("BUYER_SIGNER_PUBLIC_KEY", None)
     os.execvpe(command[0], command, environment)
 
 
