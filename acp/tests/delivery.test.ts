@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { assertSubmittedDelivery, DeliveryEvidenceError } from "../delivery.js";
+import { assertSubmittedDelivery, DeliveryEvidenceError, submissionBlockRange } from "../delivery.js";
 
 const reviewer = "0xca8c2b88533d0085404ed46f4101f38997999701";
 const deliverable = JSON.stringify({
@@ -14,6 +14,15 @@ const deliverable = JSON.stringify({
 });
 const liveHash = "0x74d28ea02f01179fa849cd66479bb64d05f7c3f50e0049de8fe6ff054af393d7";
 const matching = { args: { jobId: 78052n, provider: reviewer, deliverable: liveHash } };
+
+test("an explicit historical submission block permits bounded recovery after a long restart", () => {
+  assert.deepEqual(submissionBlockRange(60000000n, "51120400"),
+    { fromBlock: 51120400n, toBlock: 51120400n });
+  assert.deepEqual(submissionBlockRange(60000000n),
+    { fromBlock: 59998001n, toBlock: 60000000n });
+  for (const value of ["", "-1", "1.5", "Infinity", "60000001", "001"])
+    assert.throws(() => submissionBlockRange(60000000n, value), DeliveryEvidenceError);
+});
 
 test("missing API delivery is recovered only from one matching onchain submission", () => {
   assert.equal(assertSubmittedDelivery(78052n, reviewer, deliverable, [matching]), deliverable);

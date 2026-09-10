@@ -180,6 +180,13 @@ After an interrupted run, inspect active ACP jobs before retrying. The buyer
 refuses to create another job if an active Base job exists. To resume a verified
 existing job, explicitly set `RIGHTSRELAY_ACP_RESUME_JOB_ID` to its real numeric
 onchain ID. A timeout does not imply escrow was refunded. Never invent an ID.
+Both SUBMITTED and COMPLETED revalidate the delivery against current Sibyl
+memory, including after a fresh process restart; COMPLETED never evaluates
+again. When the API delivery is absent, the automatic lookup covers the most
+recent 2,000 blocks. For an older job, also set
+`RIGHTSRELAY_ACP_SUBMISSION_BLOCK` to the independently verified block containing
+that job's `JobSubmitted` event. This narrows the lookup to that block; exact
+job/provider/hash verification still applies. Missing evidence fails closed.
 
 The published SDK accepts `AcpAgent.create({ evmProvider })`, differing from
 some upstream examples using `provider`. Installed type declarations are the
@@ -205,7 +212,20 @@ Session 1 starts the console process:
 ```
 
 Open `http://127.0.0.1:8080`. The board labels its process “this pid is the
-launcher.” After the entity reaches `CLEARED_LIMITED`, kill that exact process
+launcher.” This is a trusted-local-operator console, not a public multiuser
+service. It rejects remote peers, foreign Host/Origin requests, and cross-site
+browser requests. Actions require a per-launcher token supplied automatically
+by the local page; the page is not cacheable or frameable. Do not publish this
+service through a proxy or tunnel. The public submission site is static only.
+
+Status is recalculated from the current Sibyl authorization and HOT attempt,
+not journal history. Missing/corrupt memory blocks verification. A packet is
+reported written only when its contents match the current approved attempt,
+authorization version, and evidence; older/mismatched files are retained but
+marked historical. A disconnected or stale browser shows `UNVERIFIED`, removes
+packet confirmation, stops its live clock, and disables actions.
+
+After the entity reaches `CLEARED_LIMITED`, kill that exact process
 from a visible terminal:
 
 ```bash
@@ -219,7 +239,8 @@ shows a different launcher PID:
 ./scripts/demo_session2.sh
 ```
 
-On the reopened board, click **Attempt paid IG US+UK** (red `BLOCKED`, packet
+Reload the board after restarting to obtain the new launcher token; the old
+token cannot authorize actions. On the reopened board, click **Attempt paid IG US+UK** (red `BLOCKED`, packet
 none), **Acquire grant (x402)** (real 402/payment/retry), then **Attempt again**
 (green `CLEARED`, packet written). The packet is
 `release-packets/campaign-aurora-neon-drive.json`. The exact four-minute take is

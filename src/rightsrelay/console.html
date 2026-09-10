@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="rightsrelay-action-token" content="__RIGHTSRELAY_ACTION_TOKEN__">
   <title>RightsRelay — Release Gate</title>
   <style>
     :root {
@@ -139,7 +140,7 @@
       <section class="panel gate-panel">
         <div class="panel-title"><span>Release gate</span><span id="db-path">DB —</span></div>
         <div class="gate-stage" id="gate-stage" data-status="PENDING">
-          <div class="gate-kicker">Deterministic decision</div>
+          <div class="gate-kicker" id="gate-kicker">Awaiting current memory</div>
           <div class="gate-status" id="gate-status">PENDING</div>
           <ul class="reason-list" id="reasons"><li class="empty">No blocking reasons</li></ul>
         </div>
@@ -194,6 +195,29 @@
     let serverUtc = null;
     let receivedAt = 0;
     let actionRunning = false;
+    let statusConnected = false;
+    let pollRunning = false;
+    const staleAfterMs = 5000;
+
+    function syncButtons() {
+      document.querySelectorAll(".action").forEach((item) => item.disabled = actionRunning || !statusConnected);
+    }
+
+    function markUnverified(message) {
+      statusConnected = false;
+      serverUtc = null;
+      lastStatus = null;
+      $("utc").textContent = "—";
+      $("entity-found").textContent = "status unavailable";
+      $("gate-stage").dataset.status = "BLOCKED";
+      $("gate-kicker").textContent = "Live verification unavailable";
+      $("gate-status").textContent = "UNVERIFIED";
+      $("reasons").innerHTML = `<li>${escapeHtml(message)}</li>`;
+      $("packet-state").textContent = "packet: unverified";
+      $("packet-state").classList.toggle("written", false);
+      $("packet-path").textContent = "Awaiting a current memory check.";
+      syncButtons();
+    }
 
     function compact(value) {
       if (!value) return "—";
@@ -219,12 +243,14 @@
     function render(data) {
       serverUtc = Date.parse(data.utc);
       receivedAt = Date.now();
+      statusConnected = true;
       $("git").textContent = data.git;
       $("pid").textContent = data.pid;
       $("db-path").textContent = `DB ${data.db_path}`;
       $("entity-name").textContent = data.entity_name;
       $("entity-found").textContent = data.entity_found ? "memory online" : "not initialized";
       $("gate-stage").dataset.status = data.status;
+      $("gate-kicker").textContent = data.current_attempt ? "Deterministic decision" : "Authorization state";
       if (lastStatus !== null && lastStatus !== data.status) {
         $("gate-status").classList.add("changed");
         window.setTimeout(() => $("gate-status").classList.remove("changed"), 260);
@@ -245,27 +271,42 @@
       $("x402-link").href = data.x402_explorer || "#";
       $("packet-state").textContent = data.packet_written ? "packet: written" : "packet: none";
       $("packet-state").classList.toggle("written", data.packet_written);
-      $("packet-path").textContent = data.packet_path || "Gate must clear before export.";
+      $("packet-path").textContent = data.packet_path || (data.packet_state === "historical"
+        ? "An older or mismatched packet exists; it does not confirm this release."
+        : "Gate must clear before export.");
       renderJournal(data.journal);
+      syncButtons();
     }
 
     async function poll() {
-      if (actionRunning) return;
+      if (pollRunning) return;
+      pollRunning = true;
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 3000);
       try {
-        const response = await fetch("/status", {cache: "no-store"});
+        const response = await fetch("/status", {cache: "no-store", signal: controller.signal});
         if (!response.ok) throw new Error(`status ${response.status}`);
         render(await response.json());
       } catch (error) {
+        markUnverified("Current authorization cannot be confirmed. Reconnect to the launcher.");
         $("command-log").textContent = `STATUS ERROR · ${error.message}`;
+      } finally {
+        window.clearTimeout(timeout);
+        pollRunning = false;
       }
     }
 
     async function runAction(button) {
+      if (!statusConnected || actionRunning) return;
       actionRunning = true;
-      document.querySelectorAll(".action").forEach((item) => item.disabled = true);
+      syncButtons();
       $("command-log").textContent = `RUNNING · ${button.textContent.trim()}`;
       try {
-        const response = await fetch(`/actions/${button.dataset.action}`, {method: "POST"});
+        const response = await fetch(`/actions/${button.dataset.action}`, {
+          method: "POST",
+          headers: {"X-RightsRelay-Action-Token": document.querySelector('meta[name="rightsrelay-action-token"]').content},
+        });
+        if (!response.ok) throw new Error(response.status === 403 ? "Reload the local console to authorize actions" : `action ${response.status}`);
         const result = await response.json();
         const output = [result.stdout, result.stderr].filter(Boolean).join("\n").trim();
         $("command-log").textContent = `EXIT ${result.returncode} · ${result.duration_ms}ms\n${output || "No output"}`;
@@ -273,16 +314,20 @@
         $("command-log").textContent = `ACTION ERROR · ${error.message}`;
       } finally {
         actionRunning = false;
-        document.querySelectorAll(".action").forEach((item) => item.disabled = false);
+        syncButtons();
         await poll();
       }
     }
 
     document.querySelectorAll(".action").forEach((button) => button.addEventListener("click", () => runAction(button)));
     window.setInterval(() => {
+      if (statusConnected && Date.now() - receivedAt > staleAfterMs) {
+        markUnverified("The last memory observation is stale. Waiting for the launcher.");
+      }
       if (serverUtc !== null) $("utc").textContent = new Date(serverUtc + Date.now() - receivedAt).toISOString().replace(".000Z", "Z");
     }, 250);
     window.setInterval(poll, 1000);
+    syncButtons();
     poll();
   </script>
 </body>

@@ -6,8 +6,9 @@ import {
   AcpAgent, AssetToken, JobSession, JobStatus, PrivyAlchemyEvmProviderAdapter,
 } from "@virtuals-protocol/acp-node-v2";
 import { createPublicClient, getAddress, http, parseAbiItem, zeroAddress } from "viem";
-import { assertSubmittedDelivery } from "./delivery.js";
+import { assertSubmittedDelivery, submissionBlockRange } from "./delivery.js";
 import { createKeystoreSigner } from "./signer.js";
+import { processReviewPhase } from "./review_completion.js";
 import { RIGHTS_REVIEW_OFFERING as offeringName, OfferingError, selectRightsReviewOffering } from "./offering.js";
 
 // Do not forward raw SDK logging: errors may contain signing requests or tokens.
@@ -130,9 +131,9 @@ async function main(): Promise<void> {
           "event JobSubmitted(uint256 indexed jobId, address indexed provider, bytes32 deliverable)",
         ),
         args: { jobId: BigInt(id) },
-        fromBlock: head > 1999n ? head - 1999n : 0n,
-        toBlock: head,
+        ...submissionBlockRange(head, process.env.RIGHTSRELAY_ACP_SUBMISSION_BLOCK || undefined),
       });
+      if (!logs.length) fail("No submission event in lookup window; for an older job set RIGHTSRELAY_ACP_SUBMISSION_BLOCK to its verified submission block");
       return assertSubmittedDelivery(BigInt(id), sellerAddress, serialized, logs);
     }
 
@@ -192,20 +193,24 @@ async function main(): Promise<void> {
         await session.fund(fare);
         funded = true;
         progress(`Job ${id}: ${offering.priceValue} USDC escrow funded`);
-      } else if (job.status === JobStatus.SUBMITTED && !evaluated) {
-        const serialized = session.job!.deliverable ?? await recoverSubmittedDelivery(id);
-        if (!session.job!.deliverable) progress(`Job ${id}: API delivery missing; onchain hash verified`);
-        const deliverable = JSON.parse(serialized);
-        memory("verify", { job_id: id, deliverable });
-        await session.complete("Self-evaluation: delivery equals the persisted Sibyl authorization");
+      } else if ((job.status === JobStatus.SUBMITTED && !evaluated) || job.status === JobStatus.COMPLETED) {
+        const result = await processReviewPhase({
+          phase: job.status === JobStatus.COMPLETED ? "COMPLETED" : "SUBMITTED",
+          apiDeliverable: session.job!.deliverable,
+          recoverDelivery: async () => {
+            const recovered = await recoverSubmittedDelivery(id);
+            progress(`Job ${id}: API delivery missing; onchain hash verified`);
+            return recovered;
+          },
+          verifyDelivery: deliverable => { memory("verify", { job_id: id, deliverable }); },
+          complete: () => session.complete("Self-evaluation: delivery equals the persisted Sibyl authorization"),
+        });
+        if (result.phase === "COMPLETED") {
+          emit({ type: "result", job_id: id, phase: "COMPLETED", contract_explorer_url: explorer, deliverable: result.deliverable });
+          return;
+        }
         evaluated = true;
         progress(`Job ${id}: memory verified; evaluation accepted`);
-      } else if (job.status === JobStatus.COMPLETED) {
-        if (!session.job!.deliverable) { await delay(poll); continue; }
-        const deliverable = JSON.parse(session.job!.deliverable ?? "null");
-        memory("verify", { job_id: id, deliverable });
-        emit({ type: "result", job_id: id, phase: "COMPLETED", contract_explorer_url: explorer, deliverable });
-        return;
       } else if ([JobStatus.REJECTED, JobStatus.EXPIRED].includes(job.status)) {
         fail(`Job ${id} rejected or expired; no successful review claimed`);
       }

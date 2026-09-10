@@ -14,7 +14,8 @@ beside the board so the real process kill is visible.
 - Run `./scripts/demo_session1.sh` for live ACP, or
   `./scripts/demo_session1_offline.sh` when ACP registration is unavailable.
 - Open `http://127.0.0.1:8080`. Hold the updating UTC clock, commit hash,
-  launcher PID, database path, entity name, `PENDING`, and `packet: none`.
+  launcher PID, database path, entity name, and `packet: none`. An empty database
+  correctly shows `BLOCKED` (missing authorization); Init Aurora makes it `PENDING`.
 
 **0:20–1:10 — write and review**
 
@@ -34,10 +35,12 @@ beside the board so the real process kill is visible.
 
 - In the visible terminal run `kill <LAUNCHER_PID>` using the PID on the board.
 - Show that the console process stops. This is not a UI reset.
+- Hold the disconnected board's `UNVERIFIED` state and stopped clock.
 
 **1:30–1:50 — fresh launcher recall**
 
-- Run `./scripts/demo_session2.sh` and reopen the board.
+- Run `./scripts/demo_session2.sh` and reload the board (the new process rotates
+  its local action token; an old page cannot authorize actions).
 - Hold the different launcher PID and the same recalled `CLEARED_LIMITED`
   entity. There is no chat transcript.
 

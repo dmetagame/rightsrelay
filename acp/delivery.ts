@@ -2,6 +2,16 @@ import { getAddress, keccak256, toHex } from "viem";
 
 export class DeliveryEvidenceError extends Error {}
 
+/** A caller-supplied block narrows the lookup; it never bypasses log verification. */
+export function submissionBlockRange(head: bigint, supplied?: string): { fromBlock: bigint; toBlock: bigint } {
+  if (supplied !== undefined) {
+    if (!/^(0|[1-9][0-9]*)$/.test(supplied) || BigInt(supplied) > head)
+      throw new DeliveryEvidenceError("Invalid RIGHTSRELAY_ACP_SUBMISSION_BLOCK");
+    return { fromBlock: BigInt(supplied), toBlock: BigInt(supplied) };
+  }
+  return { fromBlock: head > 1999n ? head - 1999n : 0n, toBlock: head };
+}
+
 /** Verify the exact structured delivery against one decoded JobSubmitted log. */
 export function assertSubmittedDelivery(
   jobId: bigint,

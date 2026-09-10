@@ -94,7 +94,7 @@ def adapter_environment() -> dict[str, str]:
              "XDG_DATA_HOME", "XDG_CONFIG_HOME", "DBUS_SESSION_BUS_ADDRESS",
              "RIGHTSRELAY_ACP_ALLOW_TRANSACTIONS", "RIGHTSRELAY_ACP_MAX_USDC",
              "RIGHTSRELAY_ACP_TIMEOUT_SECONDS", "RIGHTSRELAY_ACP_POLL_SECONDS",
-             "RIGHTSRELAY_ACP_RESUME_JOB_ID")
+             "RIGHTSRELAY_ACP_RESUME_JOB_ID", "RIGHTSRELAY_ACP_SUBMISSION_BLOCK")
     result = {name: os.environ[name] for name in names if name in os.environ}
     result["RIGHTSRELAY_PYTHON"] = sys.executable
     return result

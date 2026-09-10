@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 import os
+import json
 import re
+import secrets
+from ipaddress import ip_address
+from urllib.parse import urlsplit
 import subprocess
 import sys
 import time
@@ -9,13 +13,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import HTMLResponse, JSONResponse
 from sibyl_memory_client import NotFoundError
 
 from rightsrelay.acp_client import ACP_CONTRACT_EXPLORER
 from rightsrelay.app import PACKET_RELATIVE_PATH
 from rightsrelay.journal import Journal
+from rightsrelay.gate import can_release
 from rightsrelay.memory import (
     AUTHORIZATION_NAME,
     AuthorizationMemory,
@@ -23,7 +28,6 @@ from rightsrelay.memory import (
 )
 
 TRANSACTION_HASH = re.compile(r"0x[0-9a-fA-F]{64}")
-DISPLAY_STATUSES = {"PENDING", "CLEARED_LIMITED", "BLOCKED", "CLEARED"}
 
 ACTION_COMMANDS: dict[str, list[str]] = {
     "init-aurora": ["init-aurora"],
@@ -93,41 +97,59 @@ def console_status(
     working_directory = working_directory.expanduser().resolve()
     packet_candidate = (working_directory / PACKET_RELATIVE_PATH).resolve()
 
-    entity_found = True
+    entity_found = False
+    memory_available = True
+    attempt = None
+    decision = None
+    authorization = None
+    body = {
+        "status": "PENDING", "blocking_reasons": [], "channels": [],
+        "paid": False, "territories": [], "expires_on": None,
+        "acp_job_id": None, "x402_tx": None,
+    }
     try:
-        authorization = AuthorizationMemory(database).get_authorization()
+        memory = AuthorizationMemory(database)
+        authorization = memory.get_authorization()
         body = authorization.model_dump(mode="json")
+        entity_found = True
+        attempt = memory.get_current_attempt()
+        decision = can_release(authorization, attempt) if attempt is not None else None
+        status = decision.status if decision is not None else authorization.status
+        reasons = decision.reasons if decision is not None else authorization.blocking_reasons
     except MemoryUnavailableError as exc:
-        if not _is_not_found(exc):
-            raise
-        entity_found = False
-        body = {
-            "status": "PENDING",
-            "blocking_reasons": [],
-            "channels": [],
-            "paid": False,
-            "territories": [],
-            "expires_on": None,
-            "acp_job_id": None,
-            "x402_tx": None,
-        }
+        memory_available = False
+        status = "BLOCKED"
+        reasons = ["Authorization is missing; release cannot be verified" if _is_not_found(exc)
+                   else "Authorization or current attempt is unavailable; release cannot be verified"]
 
-    events = _ordered_events(database)
-    latest_extra = events[-1].get("extra", {}) if events else {}
-    event_status = latest_extra.get("status")
-    status = event_status if event_status in DISPLAY_STATUSES else body["status"]
-    reasons = (
-        list(latest_extra.get("reasons", []))
-        if status == "BLOCKED"
-        else list(body.get("blocking_reasons", []))
-    )
+    try:
+        events = _ordered_events(database)
+    except Exception:
+        events = []
+        memory_available = False
+        status = "BLOCKED"
+        reasons = ["Sibyl journal is unavailable; release cannot be verified"]
     transaction = body.get("x402_tx")
     transaction_link = (
         f"https://sepolia.basescan.org/tx/{transaction}"
         if isinstance(transaction, str) and TRANSACTION_HASH.fullmatch(transaction)
         else None
     )
-    packet_written = packet_candidate.is_file()
+    packet_present = packet_candidate.is_file()
+    packet_written = False
+    if memory_available and authorization is not None and attempt is not None and decision is not None and decision.ok:
+        expected_packet = {
+            **attempt.model_dump(mode="json"),
+            "authorization_version": authorization.version,
+            "gate_status": decision.status,
+            "evidence_refs": authorization.evidence_refs,
+            "acp_job_id": authorization.acp_job_id,
+            "x402_tx": authorization.x402_tx,
+        }
+        try:
+            packet_written = json.loads(packet_candidate.read_text(encoding="utf-8")) == expected_packet
+        except (OSError, ValueError):
+            pass
     journal = [
         {
             "evaluated": event.get("evaluated"),
@@ -147,8 +169,10 @@ def console_status(
         "db_path": str(database),
         "entity_name": AUTHORIZATION_NAME,
         "entity_found": entity_found,
+        "memory_available": memory_available,
         "status": status,
         "authorization_status": body["status"],
+        "current_attempt": attempt.model_dump(mode="json") if attempt is not None else None,
         "reasons": reasons,
         "channels": body.get("channels", []),
         "paid": body.get("paid", False),
@@ -160,6 +184,8 @@ def console_status(
         "x402_explorer": transaction_link,
         "journal": journal,
         "packet_written": packet_written,
+        "packet_present": packet_present,
+        "packet_state": "current" if packet_written else "historical" if packet_present else "none",
         "packet_path": str(packet_candidate) if packet_written else None,
     }
 
@@ -174,17 +200,46 @@ def create_console_app(
     working_directory = working_directory.expanduser().resolve()
     html_path = Path(__file__).with_name("console.html")
     app = FastAPI(title="RightsRelay demo console", docs_url=None, redoc_url=None)
+    action_token = secrets.token_urlsafe(32)
+
+    @app.middleware("http")
+    async def local_operator_boundary(request: Request, call_next):
+        try:
+            local_peer = request.client is not None and ip_address(request.client.host).is_loopback
+            url = request.url
+            allowed = local_peer and url.hostname in {"127.0.0.1", "localhost", "::1"}
+            origin = request.headers.get("origin")
+            if origin is not None:
+                parsed = urlsplit(origin)
+                allowed = allowed and (
+                    parsed.scheme == url.scheme and parsed.netloc == url.netloc
+                    and parsed.path == "" and not parsed.query and not parsed.fragment
+                )
+            allowed = allowed and request.headers.get("sec-fetch-site", "none") in {"none", "same-origin"}
+        except ValueError:
+            allowed = False
+        if not allowed:
+            response = JSONResponse(status_code=403, content={"detail": "Console access requires the local origin"})
+        else:
+            response = await call_next(request)
+        response.headers["Cache-Control"] = "no-store"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Content-Security-Policy"] = "frame-ancestors 'none'"
+        return response
 
     @app.get("/", response_class=HTMLResponse)
     async def board() -> str:
-        return html_path.read_text(encoding="utf-8")
+        return html_path.read_text(encoding="utf-8").replace("__RIGHTSRELAY_ACTION_TOKEN__", action_token)
 
     @app.get("/status")
     async def status() -> dict[str, Any]:
         return console_status(database=database, working_directory=working_directory)
 
     @app.post("/actions/{action}")
-    async def run_action(action: str) -> dict[str, Any]:
+    async def run_action(action: str, request: Request) -> dict[str, Any]:
+        supplied = request.headers.get("x-rightsrelay-action-token", "")
+        if not supplied.isascii() or not secrets.compare_digest(supplied, action_token):
+            raise HTTPException(status_code=403, detail="Reload the local console to authorize actions")
         command = ACTION_COMMANDS.get(action)
         if command is None:
             raise HTTPException(status_code=404, detail="unknown demo action")

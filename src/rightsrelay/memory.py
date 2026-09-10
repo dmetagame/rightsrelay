@@ -67,3 +67,11 @@ class AuthorizationMemory:
         if not isinstance(body, dict):
             raise MemoryUnavailableError("authorization memory has an invalid body")
         return UseAuthorization.model_validate(body)
+
+    def get_current_attempt(self) -> ReleaseAttempt | None:
+        """Read the real HOT state envelope; missing state means no attempt yet."""
+        try:
+            row = self._client.get_state(CURRENT_ATTEMPT_KEY)
+            return None if row is None else ReleaseAttempt.model_validate(row["body"])
+        except Exception as exc:
+            raise MemoryUnavailableError("current release attempt could not be recalled") from exc
