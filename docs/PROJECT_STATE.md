@@ -9,6 +9,7 @@ Active objective: Approved signer callback and exact rights_review matching are 
 
 ## Current Completed Checkpoint
 
+- Published implementation commit: `d3b899495b3be719800d66a5c64eb9c993fa1069`. After an interrupted publish request, verified the existing local commit instead of creating a duplicate; `git push origin main` succeeded and `git ls-remote origin refs/heads/main` matched it. Worktree was clean and tracking origin/main before this state-only receipt update.
 - Started from clean published `fe29a0937473bf06775cb0393f3498797905eb15`, main tracking origin/main. User confirmed the new test boundaries before implementation. The following older sections are historical; this section is authoritative.
 - `acp/signer.ts` implements the official CLI 1.0.35 executable protocol via SDK 0.1.12 `signFn`. It requires an absolute executable path and a canonical P256 public key, invokes without a shell, forwards only keystore runtime variables, verifies every returned signature against the selected public key, and sanitizes errors without raw output or causes. No private-key export or new dependency.
 - `acp/runner.ts` now passes the role's public selector to that callback; Python provider configuration and its launcher use the same public-selector/binary configuration. The earlier Python client preparation is now fully connected. Existing transaction opt-in, fee cap, escrow lifecycle, memory checks, and role-specific selector filtering remain intact.
