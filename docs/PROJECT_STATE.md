@@ -3,9 +3,19 @@
 > Living handoff for Codex sessions. Read this file before working. Do not put
 > secrets or raw credential-bearing values here.
 
-Last updated: `2026-09-10T00:27:01Z`
-Status: `ACP_SIGNER_COMPATIBILITY_COMPLETE_OFFLINE_VERIFIED`
-Active objective: Approved signer callback and exact rights_review matching are complete and locally verified. Next milestone is a separately approved/funded real ACP job. Core, x402, and ACP lifecycle are unchanged; mainnet spending remains disabled.
+Last updated: `2026-09-10T08:17:51Z`
+Status: `ACP_LIVE_PREFLIGHT_VERIFIED_AWAITING_FUNDING_AND_SPEND_APPROVAL`
+Active objective: Real signer-authenticated registry/job reads now verified for both roles. Buyer has no Base mainnet USDC; obtain funding method/amount and separate spending approval before a real job. Core, x402, and ACP lifecycle are unchanged; transactions remain disabled.
+
+## Latest Live Read-only Preflight
+
+- Reconciled clean main tracking origin/main at `f388ba98fa6771e170125b029ad6bf91b7a206f5`; GitHub authentication works. This turn changes no product code, wallet policy, offering, or business-memory entity.
+- Official Base mainnet RPC confirmed chain 8453; at block 51119374, both registered ACP buyer/reviewer wallets held 0 ETH and 0 USDC. These are mainnet agent wallets, not the funded x402 Base Sepolia wallets.
+- CLI owner session reports NOT_AUTHENTICATED, but SDK authentication independently succeeds with both approved local signers. A restricted read-only diagnostic allowed only wallet sign-message, agent authentication, registry GET, and jobs GET; unexpected network routes were blocked. No runner/start/job-creation/funding method was called.
+- Real HTTP results for both roles: sign-message 201, auth/agent 201, jobs GET 200 with validated jobs arrays and no active Base jobs. Reviewer registry GET 200: exact rights_review offering, fixed 0.01 USDC, SLA 20 minutes, requiredFunds=false, subscriptions=[]. No job ID exists or is claimed.
+- Contract fee getters at block 51119456 returned platformFeeBP=500 and evaluatorFeeBP=500. Recorded as contract parameters, not an added-cost quote; do not apply older documentation's 80/20 fee split to this newer deployment without verifying settlement semantics. Official Virtuals payment FAQ describes sponsored gas, but sponsorship of a specific future run is not yet tested.
+- Funding and spending remain blocked: RIGHTSRELAY_ACP_ALLOW_TRANSACTIONS=0, cap empty. Ask the human which funding method and amount to use; do not initiate on-ramp, transfer, or charge without their choice/approval. Previously documented lower-severity dependency advisories remain a pre-funding consideration.
+- Verification is live read-only evidence; tests were not rerun because no product code changed. Last suite remains 29 Python passed/2 funded skips, 8 Node passed. Tokens and signatures were suppressed, and no keys were exposed or exported.
 
 ## Current Completed Checkpoint
 
@@ -291,9 +301,10 @@ Checkpoint above supersedes their turn-specific scope and ACP configuration.
 
 1. Both restricted signers are authorized and the two approved compatibility
    fixes are complete. Keep keys in the local CLI keystore, never chat or Git.
-2. Recheck the live registered `rights_review` offering and required schemas;
-   review residual dependency advisories and wallet policies. Quote the actual
-   job fare and any gas/platform costs, then obtain separate spending approval.
+2. Live registry and empty active-job lists are verified for both roles.
+   Ask for buyer funding method/amount (its Base mainnet USDC balance is zero),
+   review residual dependency advisories and sponsorship, then obtain explicit
+   approval for the 0.01 USDC job and any separately quoted gas/platform costs.
 3. After approval/funding only, set the approved USDC cap and transaction flag,
    start `run_acp_provider.sh`, and run `acp-review` or the explicitly opted-in
    `tests/test_acp_job.py`. Inspect active jobs before resuming after a timeout.
@@ -313,6 +324,7 @@ Checkpoint above supersedes their turn-specific scope and ACP configuration.
 
 | Timestamp | Session/agent | Event | Result |
 | --- | --- | --- | --- |
+| 2026-09-10T08:17:51Z | Codex | Completed real read-only ACP preflight | Both SDK signers authenticated; rights_review fixed 0.01 USDC; no active jobs; both mainnet wallets 0 ETH/USDC. No payment; funding and cost approval required |
 | 2026-09-10T00:27:01Z | Codex | Completed both approved ACP compatibility fixes | Actual callback verified with both local signers; 29 Python passed/2 funded skips, 8 Node passed; no core/x402/lifecycle changes or transactions |
 | 2026-09-09T20:08:00Z | Codex | Verified official local signer protocol and prepared Python config | Both real offline signatures verified; public-config/memory-refusal tracer red then green; 28 passed/2 skipped. Remaining adapter work awaits TDD test-boundary confirmation; no spending |
 | 2026-09-09T20:00:30Z | Codex | Confirmed both signer approvals and policies | Both completed and ACP_ONLY; 27 offline tests passed, 2 funded integrations skipped. No funds spent; callback/name adapter corrections await scoped approval |
