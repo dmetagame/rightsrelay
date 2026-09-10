@@ -67,14 +67,17 @@ export path has no authorization input and cannot function.
   `$0.001` test USDC (`0x6335…e46d9`), after which the identical blocked
   request cleared and wrote its packet. The CLI emits the full BaseScan link at
   runtime; tracked documentation intentionally avoids 64-byte hex material.
-- **Virtuals ACP — mainnet compatibility adapter implemented; live job pending.**
-  The adapter is pinned to `@virtuals-protocol/acp-node-v2@0.1.12` for EconomyOS
-  wallet IDs and Privy signers on Base mainnet (8453). Offline checks do not prove
-  settlement: no real ACP job ID exists yet. Both agents and the registered
-  `rights_review` offering were verified, and both local signers have verified
-  `ACP_ONLY` approval. The callback passed real offline signature checks for
-  both roles; funding and separate spending approval remain required. Do not claim
-  Virtuals as an exercised partner stack until a real funded job completes.
+- **Virtuals ACP — yes, Base mainnet job `78052`.** The registered
+  `rights_review` offering completed a real fixed-price 0.01 USDC lifecycle on
+  September 10, 2026: request, budget negotiation, escrow funding, separate
+  reviewer delivery, and self-evaluation. The reviewer rewrote the shared Sibyl
+  entity to `CLEARED_LIMITED` and stored the real job ID. During this first live
+  run, the Virtuals job API omitted the posted deliverable from `getJob`; the
+  buyer failed closed, then completed the same job only after the on-chain
+  `JobSubmitted` hash was independently matched to the structured Sibyl JSON.
+  No duplicate job or extra-fund request was used. The adapter is pinned to
+  `@virtuals-protocol/acp-node-v2@0.1.12`, and both signers use `ACP_ONLY`
+  approval.
 
 ACP review escrow and the later x402 rights purchase are separate events.
 

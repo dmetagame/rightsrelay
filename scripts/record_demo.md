@@ -21,8 +21,9 @@ beside the board so the real process kill is visible.
 - Click **Init Aurora**.
 - With live ACP, click **ACP review** and keep the real job/escrow output visible.
 - Without live ACP prerequisites, click **Review (offline)** and say exactly:
-  “Reviewer is local this take; ACP job is the same write path, live job at
-  workshop.” Never imply that the local review created an ACP job.
+  “Reviewer is local this take; completed Base mainnet ACP proof is job 78052,
+  using the same Sibyl write path.” Never imply that the local review created
+  an ACP job.
 
 **1:10–1:20 — limited authorization**
 
@@ -62,5 +63,8 @@ beside the board so the real process kill is visible.
 
 - End on the authorization scope, final journal rows, real `acp_job_id` or
   `none`, actual `x402_tx` or settlement identifier, and packet path.
+- If the take uses the offline reviewer, show completed ACP job `78052`
+  separately as dated partner evidence; do not present the offline button as
+  the live job lifecycle.
 - Say: “RightsRelay is release operations, not legal advice. We own Neon Drive,
   operate its demo rights-holder endpoint, and this payment is Base Sepolia.”

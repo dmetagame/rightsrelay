@@ -3,9 +3,19 @@
 > Living handoff for Codex sessions. Read this file before working. Do not put
 > secrets or raw credential-bearing values here.
 
-Last updated: `2026-09-10T08:26:20Z`
-Status: `ACP_FUNDED_AWAITING_EXPLICIT_SPEND_APPROVAL`
-Active objective: Funding and signer-authenticated read-only preflight are verified. Obtain explicit approval for one 0.01 USDC `rights_review` job before enabling the transaction flag/cap. Core, x402, and ACP lifecycle are unchanged; transactions remain disabled.
+Last updated: `2026-09-10T08:50:29Z`
+Status: `ACP_LIVE_JOB_COMPLETED`
+Active objective: Preserve and film the verified RightsRelay evidence. Real Virtuals ACP job 78052 completed on Base mainnet; transactions are disabled again. Core, x402, and ACP source remain unchanged.
+
+## Live ACP Completion
+
+- The human explicitly approved one `rights_review` job capped at exactly 0.01 USDC. The cap and transaction opt-in were exported only into the two live process environments; ignored `.env` remained disabled with an empty cap.
+- A fresh ignored Sibyl database initialized `campaign-aurora:neon-drive` as PENDING. Separate buyer and reviewer processes created job 78052, negotiated the registered 0.01 USDC fare, funded escrow, updated the shared WARM entity, and submitted the structured delivery. Sibyl now persists version 2, `CLEARED_LIMITED`, actor `reviewer.acp`, and real `acp_job_id=78052`; COLD history records the review.
+- The installed SDK posted the delivery before its on-chain submit, but the current Virtuals `getJob` response omitted the delivery. The normal buyer process failed closed without evaluating. Re-posting through the SDK's official API still was not returned.
+- Recovery stayed on the same funded job: the evaluator derived the exact structured JSON idempotently from Sibyl, matched its keccak256 hash to the single on-chain `JobSubmitted` event, reran the existing memory verification, and completed job 78052. No duplicate job, second escrow, extra-fund request, fabricated ID, or additional rights mutation occurred.
+- Chain evidence: one funded transaction (`0x3930…390c`), one submitted transaction (`0xaf46…6f09`), and one completed transaction (`0x71e1…4f70`). After completion at block 51120455, buyer held 0.0105 USDC and reviewer held 0.029 USDC; both held 0 ETH. Gas sponsorship therefore worked for this run.
+- Verification after completion: both authenticated roles report job 78052 as COMPLETED with no active Base jobs; Python 29 passed/2 funded-integration skips; TypeScript check passed; Node 8 passed. Skips remain intentionally opt-in so ordinary tests cannot spend funds. `.env` and the live SQLite database remain ignored; tracked secret scan is clean.
+- Submission may now truthfully claim a real Virtuals ACP job, while disclosing the SDK/API delivery-retrieval issue. Do not run another paid job without new explicit authorization.
 
 ## ACP Funding Checkpoint
 
@@ -306,18 +316,16 @@ Checkpoint above supersedes their turn-specific scope and ACP configuration.
 
 ## Next Actions
 
-1. Both restricted signers are authorized and the two approved compatibility
-   fixes are complete. Keep keys in the local CLI keystore, never chat or Git.
-2. Live registry and empty active-job lists are verified for both roles.
-   Ask for buyer funding method/amount (its Base mainnet USDC balance is zero),
-   review residual dependency advisories and sponsorship, then obtain explicit
-   approval for the 0.01 USDC job and any separately quoted gas/platform costs.
-3. After approval/funding only, set the approved USDC cap and transaction flag,
-   start `run_acp_provider.sh`, and run `acp-review` or the explicitly opted-in
-   `tests/test_acp_job.py`. Inspect active jobs before resuming after a timeout.
-4. Retain real mainnet ACP job/escrow evidence; ask hackathon organizers to
-   confirm eligibility before claiming the partner multiplier. Rehearse with
-   the separately verified Base Sepolia x402 rights-purchase path.
+1. Preserve job 78052 and its Sibyl database as live proof. Keep transaction
+   execution disabled and do not spend remaining funds without new approval.
+2. For the final take, either use the local reviewer and separately show job
+   78052, or obtain new approval before creating another paid live job.
+3. Treat the missing off-chain deliverable as an SDK/API compatibility issue.
+   The existing buyer fails closed; any permanent hash-verification fallback
+   requires focused regression tests before changing the frozen ACP adapter.
+4. Ask hackathon organizers to confirm that the completed Base mainnet job and
+   disclosed self-evaluation count for the Virtuals multiplier. Rehearse the
+   separately verified Base Sepolia x402 rights-purchase path.
 
 ## Session Handoff
 
@@ -325,12 +333,15 @@ Checkpoint above supersedes their turn-specific scope and ACP configuration.
 - Verification command: `.venv/bin/pytest -q`.
 - Treat `src/rightsrelay/gate.py`, `src/rightsrelay/models.py`, and the existing MemoryClient call shapes as frozen unless a test turns red.
 - The demo console and submission pack are complete. Do not add product UI,
-  LLM behavior, or new protocols; do not claim Virtuals until a live job exists.
+  LLM behavior, or new protocols. Virtuals may be claimed using real job 78052,
+  with the documented delivery-retrieval limitation disclosed.
 
 ## Change Log
 
 | Timestamp | Session/agent | Event | Result |
 | --- | --- | --- | --- |
+| 2026-09-10T08:50:29Z | Codex | Completed the authorized live Virtuals ACP job | Real job 78052 completed on Base mainnet; 0.01 USDC escrow; Sibyl CLEARED_LIMITED; on-chain delivery hash verified; no duplicate or extra funds; transactions disabled again |
+| 2026-09-10T08:26:20Z | Codex | Verified ACP wallet funding | Buyer and reviewer each held 0.02 Base mainnet USDC; signer-authenticated job lists empty; no spend |
 | 2026-09-10T08:17:51Z | Codex | Completed real read-only ACP preflight | Both SDK signers authenticated; rights_review fixed 0.01 USDC; no active jobs; both mainnet wallets 0 ETH/USDC. No payment; funding and cost approval required |
 | 2026-09-10T00:27:01Z | Codex | Completed both approved ACP compatibility fixes | Actual callback verified with both local signers; 29 Python passed/2 funded skips, 8 Node passed; no core/x402/lifecycle changes or transactions |
 | 2026-09-09T20:08:00Z | Codex | Verified official local signer protocol and prepared Python config | Both real offline signatures verified; public-config/memory-refusal tracer red then green; 28 passed/2 skipped. Remaining adapter work awaits TDD test-boundary confirmation; no spending |
